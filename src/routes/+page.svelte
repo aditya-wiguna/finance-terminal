@@ -183,8 +183,8 @@
     </div>
   </header>
 
-  <div class="flex-1 overflow-auto p-4">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+  <div class="flex-1 overflow-auto p-2 md:p-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 min-h-0">
       <div class="col-span-1 md:col-span-12 terminal-panel overflow-hidden">
         <div class="terminal-panel-header flex items-center justify-between">
           <span>MARKET TICKER</span>
@@ -276,7 +276,7 @@
       <!-- IDX Stocks and Whale Alerts on same row -->
       <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">INDONESIA STOCKS (IDX)</div>
-        <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
+        <div class="p-3 space-y-2 max-h-48 md:max-h-48 overflow-y-auto">
           {#each tickers.filter(t => t.type === 'stock') as stock}
             <div class="flex items-center justify-between py-2 border-b border-[#222] last:border-0">
               <div>
@@ -295,12 +295,11 @@
         </div>
       </div>
 
-      <div class="col-span-1 md:col-span-6 whale-alert">
-        <div class="terminal-panel h-full overflow-hidden">
-          <div class="terminal-panel-header flex items-center gap-2">
-            <span>🚨</span> WHALE ALERTS
-          </div>
-          <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
+      <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
+        <div class="terminal-panel-header flex items-center gap-2">
+          <span>🚨</span> WHALE ALERTS
+        </div>
+        <div class="p-3 space-y-2 max-h-48 md:max-h-48 overflow-y-auto">
             <div class="py-2 border-b border-[#333]">
               <div class="flex items-center gap-2 mb-1">
                 <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
@@ -333,7 +332,7 @@
         {#if sectorData.length === 0}
           <div class="p-4 text-center text-gray-500">Loading sector data...</div>
         {:else}
-          <div class="grid grid-cols-3 md:grid-cols-6 gap-1 p-2">
+          <div class="grid grid-cols-2 md:grid-cols-6 gap-1 p-2">
             {#each sectorData as sector}
               <div class="p-2 rounded text-center cursor-pointer hover:brightness-125 transition-all"
                 style="background-color: {sector.change > 1 ? 'rgba(0, 255, 0, 0.3)' : sector.change > 0 ? 'rgba(0, 255, 0, 0.15)' : sector.change > -1 ? 'rgba(255, 0, 0, 0.15)' : 'rgba(255, 0, 0, 0.3)'}">
