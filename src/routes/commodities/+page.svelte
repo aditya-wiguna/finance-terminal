@@ -140,7 +140,7 @@
       </div>
     {/if}
 
-    <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="terminal-panel p-4">
         <div class="text-[#ffcc00] text-2xl font-bold">
           {goldData ? `$${formatPrice(goldData.price)}` : '$...'}
@@ -186,7 +186,7 @@
         {#if strategyLoading && strategyData.length === 0}
           <div class="p-8 text-center text-gray-500">Loading strategy analysis...</div>
         {:else}
-          <div class="grid grid-cols-2 gap-4 p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             {#each strategyData.slice(0, 6) as item}
               <div class="border rounded p-4 {getSignalBg(item.signal)}">
                 <div class="flex items-center justify-between mb-3">
@@ -294,7 +294,7 @@
       {/if}
     </div>
 
-    <div class="grid grid-cols-3 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
       <div class="terminal-panel p-4">
         <div class="terminal-panel-header mb-3">PRECIOUS METALS</div>
         <div class="space-y-2 text-xs">

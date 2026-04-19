@@ -103,7 +103,7 @@
 </script>
 
 <div class="h-full flex flex-col">
-  <div class="bg-[#121212] border-b border-[#333] px-6 py-3">
+  <div class="bg-[#121212] border-b border-[#333] px-4 md:px-6 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <h1 class="text-lg font-bold text-[#00ff00]">📰 FINANCIAL NEWS</h1>

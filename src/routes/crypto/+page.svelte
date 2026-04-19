@@ -95,8 +95,8 @@
 </script>
 
 <div class="h-full flex flex-col">
-  <div class="bg-[#121212] border-b border-[#333] px-6 py-3">
-    <div class="flex items-center justify-between">
+  <div class="bg-[#121212] border-b border-[#333] px-4 md:px-6 py-3">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
       <h1 class="text-lg font-bold text-[#00ff00]">CRYPTO MARKETS</h1>
       <div class="flex items-center gap-4 text-sm">
         <span class="text-gray-500">Top 15 by Market Cap</span>
@@ -110,7 +110,7 @@
     </div>
   </div>
 
-  <div class="flex-1 overflow-auto p-6">
+  <div class="flex-1 overflow-auto p-4">
     {#if error}
       <div class="terminal-panel p-4 mb-4 border-[#ff0000]">
         <span class="text-[#ff0000]">{error}</span>
@@ -125,7 +125,7 @@
         {#if strategyLoading && strategyData.length === 0}
           <div class="p-8 text-center text-gray-500">Loading strategy analysis...</div>
         {:else}
-          <div class="grid grid-cols-2 gap-4 p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             {#each strategyData.slice(0, 6) as item}
               <div class="border rounded p-4 {getSignalBg(item.signal)}">
                 <div class="flex items-center justify-between mb-3">
@@ -192,7 +192,7 @@
           {#if loading && memeCoins.length === 0}
             <div class="p-4 text-center text-gray-500">Loading meme coins...</div>
           {:else}
-            <div class="grid grid-cols-5 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
               {#each memeCoins.slice(0, 5) as coin}
                 <div class="bg-[#0a0a0a] rounded p-3 text-center hover:bg-[#1a1a1a] transition-colors">
                   <div class="flex justify-center mb-2">
@@ -229,7 +229,7 @@
         <div class="terminal-panel-header">🐸 MEME COIN TRACKER</div>
         <div class="divide-y divide-[#222]">
           {#each memeCoins as coin}
-            <div class="grid grid-cols-12 gap-4 items-center p-3 hover:bg-[#1a1a1a] transition-colors">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-3 hover:bg-[#1a1a1a] transition-colors">
               <div class="col-span-3 flex items-center gap-2">
                 {#if coin.thumb}
                   <img src={coin.thumb} alt={coin.name} class="w-6 h-6 rounded-full" />
@@ -266,7 +266,7 @@
     <!-- Main Crypto Table -->
     <div class="terminal-panel">
       <div class="terminal-panel-header">
-        <div class="grid grid-cols-12 gap-4 text-[#888] text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 text-[#888] text-xs">
           <div class="col-span-2">ASSET</div>
           <div class="col-span-2 text-right">PRICE</div>
           <div class="col-span-1 text-right">24H</div>
@@ -280,7 +280,7 @@
       {:else}
         <div class="divide-y divide-[#222]">
           {#each cryptoData as item}
-            <div class="grid grid-cols-12 gap-4 items-center p-4 hover:bg-[#1a1a1a] transition-colors">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 hover:bg-[#1a1a1a] transition-colors">
               <div class="col-span-2">
                 <div class="flex items-center gap-3">
                   {#if item.image}
@@ -319,7 +319,7 @@
       {/if}
     </div>
 
-    <div class="grid grid-cols-3 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
       <div class="terminal-panel p-4">
         <div class="terminal-panel-header mb-3">BTC vs ALT SEASON</div>
         <div class="space-y-2 text-xs">

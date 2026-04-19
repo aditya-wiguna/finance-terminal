@@ -167,9 +167,9 @@
 </script>
 
 <div class="h-full flex flex-col">
-  <div class="bg-[#121212] border-b border-[#333] px-6 py-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
+  <div class="bg-[#121212] border-b border-[#333] px-4 md:px-6 py-3">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+      <div class="flex flex-col gap-1">
         <h1 class="text-lg font-bold text-[#00ff00]">INDONESIA STOCKS</h1>
         <span class="text-gray-500 text-sm">
           JKSE: {marketSummary.idx.toFixed(2)} ({marketSummary.change >= 0 ? '+' : ''}{marketSummary.change.toFixed(2)}%)
@@ -187,7 +187,7 @@
     </div>
   </div>
 
-  <div class="flex-1 overflow-auto p-6">
+  <div class="flex-1 overflow-auto p-4">
     {#if error}
       <div class="terminal-panel p-4 mb-4 border-[#ff0000]">
         <span class="text-[#ff0000]">{error}</span>
@@ -229,7 +229,7 @@
     </div>
 
     <!-- Strategy Cards -->
-    <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <!-- BPJS - Beli Pagi Jual Sore -->
       <div class="terminal-panel">
         <div class="terminal-panel-header bg-[#00cc00]">🌅 BPJS (Beli Pagi Jual Sore)</div>
@@ -312,7 +312,7 @@
     </div>
 
     <!-- Top Movers Summary -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div class="terminal-panel">
         <div class="terminal-panel-header text-[#00ff00]">🟢 MOST BUYER STOCK</div>
         <div class="p-2">
@@ -372,15 +372,15 @@
     </div>
 
     <!-- Indonesian Stocks Table -->
-    <div class="terminal-panel">
+    <div class="terminal-panel overflow-x-auto">
       <div class="terminal-panel-header">🇮🇩 INDONESIAN STOCKS ({stocksData.length} stocks)</div>
       {#if loading && stocksData.length === 0}
         <div class="p-8 text-center text-gray-500">Loading stock data...</div>
       {:else if stocksData.length === 0}
         <div class="p-8 text-center text-gray-500">No stock data available</div>
       {:else}
-        <!-- Table Header -->
-        <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-[#1a1a1a] text-xs text-gray-500 border-b border-[#333]">
+        <!-- Table Header - hidden on mobile -->
+        <div class="hidden md:grid grid-cols-12 gap-2 px-4 py-2 bg-[#1a1a1a] text-xs text-gray-500 border-b border-[#333]">
           <div class="col-span-1">Symbol</div>
           <div class="col-span-2">Name</div>
           <div class="col-span-1 text-right">Price</div>
@@ -395,35 +395,50 @@
         <!-- Table Body -->
         <div class="divide-y divide-[#222]">
           {#each stocksData as item}
-            <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-[#1a1a1a] transition-colors items-center text-sm cursor-pointer" onclick={() => goto(`/stocks/${encodeURIComponent(item.symbol)}`)}>
-              <div class="col-span-1">
+            <div class="p-3 md:grid md:grid-cols-12 md:gap-2 md:px-4 md:py-3 hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+              onclick={() => goto(`/stocks/${encodeURIComponent(item.symbol)}`)}>
+              <!-- Mobile view -->
+              <div class="md:hidden flex items-center justify-between mb-2">
+                <div>
+                  <span class="text-[#0088ff] font-bold">{item.symbol}</span>
+                  <span class="text-gray-400 ml-2 text-xs">{item.name}</span>
+                </div>
+                <div class="text-right">
+                  <div class="text-white font-mono text-sm">Rp {formatPrice(item.price)}</div>
+                  <div class="{item.changePercent >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'} text-xs">
+                    {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+              <!-- Desktop view -->
+              <div class="hidden md:block col-span-1">
                 <span class="text-[#0088ff] font-bold">{item.symbol}</span>
               </div>
-              <div class="col-span-2 text-gray-400 truncate text-xs" title={item.name}>
+              <div class="hidden md:block col-span-2 text-gray-400 truncate text-xs" title={item.name}>
                 {item.name}
               </div>
-              <div class="col-span-1 text-right font-mono text-white">
+              <div class="hidden md:block col-span-1 text-right font-mono text-white">
                 Rp {formatPrice(item.price)}
               </div>
-              <div class="col-span-1 text-right {item.change >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
+              <div class="hidden md:block col-span-1 text-right {item.change >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
                 {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}
               </div>
-              <div class="col-span-1 text-right {item.changePercent >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
+              <div class="hidden md:block col-span-1 text-right {item.changePercent >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
                 {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
               </div>
-              <div class="col-span-1 text-right text-gray-500 text-xs">
+              <div class="hidden md:block col-span-1 text-right text-gray-500 text-xs">
                 {item.volume}
               </div>
-              <div class="col-span-1 text-right text-gray-400 text-xs">
+              <div class="hidden md:block col-span-1 text-right text-gray-400 text-xs">
                 {formatPrice(item.open)}
               </div>
-              <div class="col-span-1 text-right text-[#00ff00] text-xs">
+              <div class="hidden md:block col-span-1 text-right text-[#00ff00] text-xs">
                 {formatPrice(item.high)}
               </div>
-              <div class="col-span-1 text-right text-[#ff0000] text-xs">
+              <div class="hidden md:block col-span-1 text-right text-[#ff0000] text-xs">
                 {formatPrice(item.low)}
               </div>
-              <div class="col-span-2 text-center text-xs {item.foreign.includes('Buy') ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
+              <div class="hidden md:block col-span-2 text-center text-xs {item.foreign.includes('Buy') ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
                 {item.foreign}
               </div>
             </div>
@@ -433,7 +448,7 @@
     </div>
 
     <!-- Market Summary -->
-    <div class="grid grid-cols-2 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
       <div class="terminal-panel p-4">
         <div class="terminal-panel-header mb-3">📊 MARKET SUMMARY</div>
         <div class="space-y-2 text-xs">

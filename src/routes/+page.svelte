@@ -14,22 +14,71 @@
     type: 'crypto' | 'currency' | 'commodity' | 'stock';
   }
 
+  interface MarketStatus {
+    name: string;
+    status: 'OPEN' | 'CLOSED';
+    color: string;
+    bgColor: string;
+  }
+
+  interface SectorData {
+    name: string;
+    change: number;
+    volume: string;
+    topStock: string;
+  }
+
   let tickers = $state<MarketTicker[]>([]);
+  let sectorData = $state<SectorData[]>([]);
   let currentTime = $state(new Date().toLocaleTimeString('en-US', { hour12: false }));
+  let marketStatuses = $state<MarketStatus[]>([]);
+
+  function getMarketStatuses(): MarketStatus[] {
+    const now = new Date();
+
+    const formatTime = (timezone: string) => {
+      return now.toLocaleString('en-US', { timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit', weekday: 'short' });
+    };
+
+    const parseTime = (formatted: string) => {
+      const parts = formatted.split(' ');
+      const timeParts = parts[1].split(':');
+      return { hour: parseInt(timeParts[0]), minute: parseInt(timeParts[1]), day: parts[0] };
+    };
+
+    const jakartaTime = parseTime(formatTime('Asia/Singapore'));
+    const nyseTime = parseTime(formatTime('America/New_York'));
+    const londonTime = parseTime(formatTime('Europe/London'));
+    const tokyoTime = parseTime(formatTime('Asia/Tokyo'));
+
+    const isWeekday = (day: string) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(day);
+
+    const idxOpen = isWeekday(jakartaTime.day) && jakartaTime.hour >= 9 && (jakartaTime.hour < 15 || (jakartaTime.hour === 15 && jakartaTime.minute < 30));
+    const nyseOpen = isWeekday(nyseTime.day) && nyseTime.hour >= 9 && nyseTime.hour < 16;
+    const londonOpen = isWeekday(londonTime.day) && londonTime.hour >= 8 && (londonTime.hour < 16 || (londonTime.hour === 16 && jakartaTime.minute < 30));
+    const tokyoOpen = isWeekday(tokyoTime.day) && tokyoTime.hour >= 9 && tokyoTime.hour < 15;
+
+    return [
+      { name: 'IDX', status: idxOpen ? 'OPEN' : 'CLOSED', color: 'text-[#00ff00]', bgColor: 'bg-[#00ff00]/20' },
+      { name: 'NYSE', status: nyseOpen ? 'OPEN' : 'CLOSED', color: 'text-[#0088ff]', bgColor: 'bg-[#0088ff]/20' },
+      { name: 'LSE', status: londonOpen ? 'OPEN' : 'CLOSED', color: 'text-[#ffcc00]', bgColor: 'bg-[#ffcc00]/20' },
+      { name: 'TSE', status: tokyoOpen ? 'OPEN' : 'CLOSED', color: 'text-[#ff0000]', bgColor: 'bg-[#ff0000]/20' },
+      { name: 'CRYPTO', status: 'OPEN', color: 'text-[#f7931a]', bgColor: 'bg-[#f7931a]/20' },
+    ];
+  }
 
   async function loadData() {
     try {
-      const [crypto, stocks, commodities, currencies] = await Promise.all([
+      const [crypto, stocks, commodities, currencies, sectorRes] = await Promise.all([
         fetchCryptoData(),
         fetchIndonesianStocks(),
         fetchCommodities(),
         fetchCurrencyRates('EUR'),
+        fetch('/api/stocks/sectors').then(r => r.json()),
       ]);
 
-      // Build tickers from real data
       const newTickers: MarketTicker[] = [];
 
-      // Add top crypto
       crypto.slice(0, 3).forEach(c => {
         newTickers.push({
           symbol: c.symbol,
@@ -41,7 +90,6 @@
         });
       });
 
-      // Add currencies (EUR based)
       currencies.slice(0, 2).forEach(c => {
         newTickers.push({
           symbol: c.symbol.split('/')[1],
@@ -53,7 +101,6 @@
         });
       });
 
-      // Add commodities
       commodities.slice(0, 2).forEach(c => {
         newTickers.push({
           symbol: c.symbol,
@@ -65,7 +112,6 @@
         });
       });
 
-      // Add stocks
       stocks.slice(0, 2).forEach(s => {
         newTickers.push({
           symbol: s.symbol,
@@ -78,21 +124,22 @@
       });
 
       tickers = newTickers;
+      marketStatuses = getMarketStatuses();
+      sectorData = sectorRes?.sectors || [];
     } catch (e) {
       console.error('Dashboard data fetch error:', e);
     }
   }
 
   onMount(() => {
-    // Initial load
     loadData();
+    marketStatuses = getMarketStatuses();
 
-    // Update time every second
     const timeInterval = setInterval(() => {
       currentTime = new Date().toLocaleTimeString('en-US', { hour12: false });
+      marketStatuses = getMarketStatuses();
     }, 1000);
 
-    // Refresh data every 30 seconds
     const dataInterval = setInterval(loadData, 30000);
 
     return () => {
@@ -117,20 +164,28 @@
 </script>
 
 <div class="flex-1 flex flex-col overflow-hidden">
-  <header class="terminal-header px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-4">
+  <header class="terminal-header px-4 md:px-6 py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+    <div class="flex flex-col gap-2">
       <h2 class="text-lg font-bold text-[#00ff00]">MARKET OVERVIEW</h2>
-      <span class="text-xs text-gray-500">IDX • CRYPTO • FOREX • COMMODITIES</span>
+      <div class="flex flex-wrap gap-2">
+        {#each marketStatuses as market}
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded {market.bgColor}">
+            <span class="w-2 h-2 rounded-full {market.status === 'OPEN' ? 'bg-[#00ff00] animate-pulse' : 'bg-[#ff0000]'}"></span>
+            <span class="text-xs font-bold {market.color}">{market.name}</span>
+            <span class="text-xs {market.color}">{market.status}</span>
+          </div>
+        {/each}
+      </div>
     </div>
-    <div class="flex items-center gap-6 text-sm">
-      <span class="text-gray-400">JAKARTA: <span class="text-white">{currentTime}</span></span>
+    <div class="flex items-center gap-4 text-sm">
+      <span class="text-gray-400">SINGAPORE: <span class="text-white">{currentTime}</span></span>
       <span class="px-2 py-1 bg-[#00ff00] text-black font-bold text-xs rounded">LIVE</span>
     </div>
   </header>
 
   <div class="flex-1 overflow-auto p-4">
-    <div class="grid grid-cols-12 gap-4 h-full" style="grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr);">
-      <div class="col-span-12 terminal-panel overflow-hidden">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+      <div class="col-span-1 md:col-span-12 terminal-panel overflow-hidden">
         <div class="terminal-panel-header flex items-center justify-between">
           <span>MARKET TICKER</span>
           <span class="text-[#00ff00] text-xs blink">●</span>
@@ -155,7 +210,7 @@
         </div>
       </div>
 
-      <div class="col-span-4 terminal-panel overflow-hidden">
+      <div class="col-span-1 md:col-span-4 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">CRYPTO</div>
         <div class="p-3 space-y-2">
           {#each tickers.filter(t => t.type === 'crypto') as crypto}
@@ -176,7 +231,7 @@
         </div>
       </div>
 
-      <div class="col-span-4 terminal-panel overflow-hidden">
+      <div class="col-span-1 md:col-span-4 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">CURRENCY</div>
         <div class="p-3 space-y-2">
           {#each tickers.filter(t => t.type === 'currency') as currency}
@@ -197,7 +252,7 @@
         </div>
       </div>
 
-      <div class="col-span-4 terminal-panel overflow-hidden">
+      <div class="col-span-1 md:col-span-4 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">COMMODITIES</div>
         <div class="p-3 space-y-2">
           {#each tickers.filter(t => t.type === 'commodity') as commodity}
@@ -218,9 +273,10 @@
         </div>
       </div>
 
-      <div class="col-span-6 terminal-panel overflow-hidden">
+      <!-- IDX Stocks and Whale Alerts on same row -->
+      <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">INDONESIA STOCKS (IDX)</div>
-        <div class="p-3 space-y-2">
+        <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
           {#each tickers.filter(t => t.type === 'stock') as stock}
             <div class="flex items-center justify-between py-2 border-b border-[#222] last:border-0">
               <div>
@@ -239,10 +295,10 @@
         </div>
       </div>
 
-      <div class="col-span-6 whale-alert">
+      <div class="col-span-1 md:col-span-6 whale-alert">
         <div class="terminal-panel h-full overflow-hidden">
           <div class="terminal-panel-header flex items-center gap-2">
-            <span>🚨</span> WHALE ALERTS (WALLET PAUS)
+            <span>🚨</span> WHALE ALERTS
           </div>
           <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
             <div class="py-2 border-b border-[#333]">
@@ -269,6 +325,26 @@
             <a href="/whales" class="block text-center text-[#ff0000] text-xs mt-3 hover:underline">VIEW WHALE TRACKER →</a>
           </div>
         </div>
+      </div>
+
+      <!-- Sector Heatmap with Real Data -->
+      <div class="col-span-1 md:col-span-12 terminal-panel">
+        <div class="terminal-panel-header">📊 SECTOR HEATMAP (IDX)</div>
+        {#if sectorData.length === 0}
+          <div class="p-4 text-center text-gray-500">Loading sector data...</div>
+        {:else}
+          <div class="grid grid-cols-3 md:grid-cols-6 gap-1 p-2">
+            {#each sectorData as sector}
+              <div class="p-2 rounded text-center cursor-pointer hover:brightness-125 transition-all"
+                style="background-color: {sector.change > 1 ? 'rgba(0, 255, 0, 0.3)' : sector.change > 0 ? 'rgba(0, 255, 0, 0.15)' : sector.change > -1 ? 'rgba(255, 0, 0, 0.15)' : 'rgba(255, 0, 0, 0.3)'}">
+                <div class="text-xs font-bold text-white">{sector.name}</div>
+                <div class="{sector.change >= 0 ? 'price-up' : 'price-down'} text-xs font-mono">
+                  {sector.change >= 0 ? '+' : ''}{sector.change.toFixed(2)}%
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
       </div>
     </div>
   </div>

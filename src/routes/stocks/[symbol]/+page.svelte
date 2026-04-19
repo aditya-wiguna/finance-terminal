@@ -145,7 +145,7 @@
 </script>
 
 <div class="h-full flex flex-col">
-  <div class="bg-[#121212] border-b border-[#333] px-6 py-3">
+  <div class="bg-[#121212] border-b border-[#333] px-4 md:px-6 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <button onclick={() => goto('/stocks')} class="text-gray-500 hover:text-white mr-2">←</button>
@@ -167,7 +167,7 @@
     </div>
   </div>
 
-  <div class="flex-1 overflow-auto p-6">
+  <div class="flex-1 overflow-auto p-4">
     {#if error}
       <div class="terminal-panel p-4 mb-4 border-[#ff0000]">
         <span class="text-[#ff0000]">{error}</span>
@@ -202,7 +202,7 @@
       </div>
 
       <!-- Key Statistics -->
-      <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div class="terminal-panel">
           <div class="terminal-panel-header">📊 KEY STATISTICS</div>
           <div class="p-4 space-y-3 text-sm">
@@ -347,7 +347,7 @@
       <!-- Additional Info -->
       <div class="terminal-panel">
         <div class="terminal-panel-header">ℹ️ STOCK INFORMATION</div>
-        <div class="p-4 grid grid-cols-2 gap-4 text-sm">
+        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div class="space-y-2">
             <div class="flex justify-between">
               <span class="text-gray-500">Symbol</span>

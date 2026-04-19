@@ -97,7 +97,7 @@
       </div>
     {/if}
 
-    <div class="grid grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div class="terminal-panel">
         <div class="terminal-panel-header text-[#ff9900]">₿ BITCOIN WHALE WALLETS</div>
         {#if loading && btcWhales.length === 0}
@@ -216,7 +216,7 @@
       {/if}
     </div>
 
-    <div class="grid grid-cols-3 gap-4 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
       <div class="terminal-panel p-4">
         <div class="terminal-panel-header mb-3">📊 WHALE STATISTICS</div>
         <div class="space-y-2 text-xs">
