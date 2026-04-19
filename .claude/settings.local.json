@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(npm uninstall *)",
+      "Bash(npm install *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(curl *)",
+      "WebSearch",
+      "WebFetch(domain:metals-api.com)",
+      "Bash(node -e \"const yf = require\\('yahoo-finance2'\\).default; console.log\\(typeof yf\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(grep *)"
+    ]
+  }
+}
