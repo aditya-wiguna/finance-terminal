@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -43,6 +44,14 @@ function formatVolume(volume: number): string {
 }
 
 export async function GET() {
+  const cacheKey = 'commodities_all';
+
+  // Check cache first
+  const cached = getCache<CommodityInfo[]>(cacheKey);
+  if (cached) {
+    return json(cached);
+  }
+
   try {
     const yahooSymbols = COMMODITY_SYMBOLS.map(c => c.yahooSymbol);
 
@@ -67,6 +76,9 @@ export async function GET() {
         });
       }
     }
+
+    // Store in cache
+    setCache(cacheKey, commodities);
 
     return json(commodities);
   } catch (error) {

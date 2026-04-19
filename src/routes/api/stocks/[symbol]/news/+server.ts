@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -21,6 +22,13 @@ export async function GET({ params }) {
   try {
     const symbol = params.symbol.toUpperCase();
 
+    // Check cache
+    const cacheKey = `news_stock_${symbol}`;
+    const cached = getCache<NewsArticle[]>(cacheKey);
+    if (cached) {
+      return json(cached);
+    }
+
     // Use search with the symbol to get related news
     const results = await yahooFinance.search(symbol, {
       quotesCount: 0,
@@ -40,6 +48,9 @@ export async function GET({ params }) {
       } : undefined,
       summary: article.summary || '',
     }));
+
+    // Store in cache
+    setCache(cacheKey, articles);
 
     return json(articles);
   } catch (error) {

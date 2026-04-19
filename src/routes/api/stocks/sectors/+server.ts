@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -64,6 +65,14 @@ interface SectorData {
 }
 
 export async function GET() {
+  const cacheKey = 'stocks_sectors';
+
+  // Check cache first
+  const cached = getCache<{ sectors: SectorData[] }>(cacheKey);
+  if (cached) {
+    return json(cached);
+  }
+
   try {
     const sectors: SectorData[] = [];
 
@@ -107,7 +116,11 @@ export async function GET() {
       }
     }
 
-    return json({ sectors });
+    // Store in cache
+    const result = { sectors };
+    setCache(cacheKey, result);
+
+    return json(result);
   } catch (error) {
     console.error('Sector API error:', error);
     return json({ error: 'Failed to fetch sector data' }, { status: 500 });

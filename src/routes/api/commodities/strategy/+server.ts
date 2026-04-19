@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -188,6 +189,14 @@ function analyzeCommodity(
 }
 
 export async function GET() {
+  const cacheKey = 'commodities_strategy';
+
+  // Check cache first
+  const cached = getCache<StrategyResult>(cacheKey);
+  if (cached) {
+    return json(cached);
+  }
+
   try {
     const signals: StrategySignal[] = [];
 
@@ -216,10 +225,15 @@ export async function GET() {
     // Sort by signal strength
     signals.sort((a, b) => b.strength - a.strength);
 
-    return json({
+    const result: StrategyResult = {
       commodities: signals,
       lastUpdate: new Date().toISOString(),
-    });
+    };
+
+    // Store in cache
+    setCache(cacheKey, result);
+
+    return json(result);
   } catch (error) {
     console.error('Commodity strategy API error:', error);
     return json({ error: 'Failed to fetch strategy data' }, { status: 500 });

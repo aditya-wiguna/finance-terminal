@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -89,7 +90,7 @@ export async function GET({ url }) {
   try {
     const symbol = url.searchParams.get('symbol');
 
-    // If symbol is provided, return single stock
+    // If symbol is provided, return single stock (no cache - individual stock)
     if (symbol) {
       const stockSymbol = symbol.toUpperCase().includes('.JK')
         ? symbol.toUpperCase()
@@ -102,7 +103,13 @@ export async function GET({ url }) {
       return json({ error: 'Stock not found' }, { status: 404 });
     }
 
-    // Otherwise return all stocks
+    // Otherwise return all stocks - use cache
+    const cacheKey = 'stocks_idx_all';
+    const cached = getCache<StockInfo[]>(cacheKey);
+    if (cached) {
+      return json(cached);
+    }
+
     const symbols = IDX_STOCKS.map(s => s.symbol);
     const quotes = await yahooFinance.quote(symbols) as StockQuote[];
 
@@ -129,6 +136,9 @@ export async function GET({ url }) {
         });
       }
     }
+
+    // Store in cache
+    setCache(cacheKey, stocks);
 
     return json(stocks);
   } catch (error) {

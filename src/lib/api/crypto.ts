@@ -55,6 +55,13 @@ export async function fetchCryptoData(): Promise<CryptoData[]> {
     const url = `${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=15&page=1&sparkline=true&price_change_percentage=24h`;
 
     const response = await fetch(url);
+
+    // Handle rate limiting - return cached data if available
+    if (response.status === 429) {
+      console.warn('CoinGecko rate limited');
+      return cachedData.length > 0 ? cachedData : [];
+    }
+
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const data = await response.json();
@@ -93,6 +100,12 @@ export async function fetchTrendingMemeCoins(): Promise<TrendingMemeCoin[]> {
     // Fetch trending coins from CoinGecko
     const trendingUrl = `${COINGECKO_API}/search/trending`;
     const trendingResponse = await fetch(trendingUrl);
+
+    // Handle rate limiting - return cached data
+    if (trendingResponse.status === 429) {
+      console.warn('CoinGecko trending rate limited');
+      return cachedMemeCoins.length > 0 ? cachedMemeCoins : [];
+    }
 
     if (!trendingResponse.ok) throw new Error(`HTTP ${trendingResponse.status}`);
 

@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -186,6 +187,14 @@ function analyzeCurrency(
 }
 
 export async function GET() {
+  const cacheKey = 'currency_strategy';
+
+  // Check cache first
+  const cached = getCache<StrategyResult>(cacheKey);
+  if (cached) {
+    return json(cached);
+  }
+
   try {
     const signals: StrategySignal[] = [];
 
@@ -210,10 +219,15 @@ export async function GET() {
 
     signals.sort((a, b) => b.strength - a.strength);
 
-    return json({
+    const result: StrategyResult = {
       currencies: signals,
       lastUpdate: new Date().toISOString(),
-    });
+    };
+
+    // Store in cache
+    setCache(cacheKey, result);
+
+    return json(result);
   } catch (error) {
     console.error('Currency strategy API error:', error);
     return json({ error: 'Failed to fetch strategy data' }, { status: 500 });

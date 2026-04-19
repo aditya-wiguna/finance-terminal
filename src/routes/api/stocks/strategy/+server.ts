@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -162,6 +163,14 @@ function calculateStrategy(quote: StockQuote, name: string): { bpjs: StrategySto
 }
 
 export async function GET() {
+  const cacheKey = 'stocks_strategy';
+
+  // Check cache first
+  const cached = getCache<StrategyResult>(cacheKey);
+  if (cached) {
+    return json(cached);
+  }
+
   try {
     const symbols = IDX_STOCKS.map(s => s.symbol);
     const quotes = await yahooFinance.quote(symbols) as StockQuote[];
@@ -192,6 +201,9 @@ export async function GET() {
       bpjs: bpjsStocks.slice(0, 5),
       bsjp: bsjpStocks.slice(0, 5),
     };
+
+    // Store in cache
+    setCache(cacheKey, result);
 
     return json(result);
   } catch (error) {

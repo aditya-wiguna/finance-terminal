@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -64,6 +65,13 @@ export async function GET({ params }) {
     const symbol = params.symbol.toUpperCase();
     const fullSymbol = symbol.includes('.') ? symbol : symbol;
 
+    // Check cache
+    const cacheKey = `stock_${fullSymbol}`;
+    const cached = getCache<StockDetail>(cacheKey);
+    if (cached) {
+      return json(cached);
+    }
+
     const quotes = await yahooFinance.quote([fullSymbol]) as StockQuote[];
     const quote = quotes[0];
 
@@ -91,6 +99,9 @@ export async function GET({ params }) {
       exchange: quote.exchange || 'Unknown',
       currency: quote.currency || 'USD',
     };
+
+    // Store in cache
+    setCache(cacheKey, stockDetail);
 
     return json(stockDetail);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import YahooFinance from 'yahoo-finance2';
+import { getCache, setCache } from '$lib/cache';
 
 const yahooFinance = new YahooFinance();
 
@@ -93,6 +94,13 @@ export async function GET({ url }) {
     const query = url.searchParams.get('q') || '';
     const newsCount = parseInt(url.searchParams.get('count') || '30');
     const category = url.searchParams.get('category') || 'all';
+
+    // Check cache based on category (news is expensive)
+    const cacheKey = `news_${category}`;
+    const cached = getCache<NewsArticle[]>(cacheKey);
+    if (cached) {
+      return json(cached);
+    }
 
     let articles: NewsArticle[] = [];
 
@@ -201,6 +209,9 @@ export async function GET({ url }) {
         summary: article.summary || '',
       }));
     }
+
+    // Store in cache
+    setCache(cacheKey, articles);
 
     return json(articles);
   } catch (error) {
