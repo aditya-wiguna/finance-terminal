@@ -3,6 +3,7 @@
   import { fetchCryptoData } from '$lib/api/crypto';
   import { fetchIndonesianStocks, fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/stocks';
   import { fetchCommodities } from '$lib/api/commodities';
+  import { fetchGeoRiskIndex, type GeoRiskIndex } from '$lib/api/geopolitical';
   import { fetchCurrencyRates } from '$lib/api/currency';
 
   interface MarketTicker {
@@ -31,6 +32,7 @@
   let tickers = $state<MarketTicker[]>([]);
   let sectorData = $state<SectorData[]>([]);
   let stocksEMABB = $state<StockStrategySignal[]>([]);
+  let geoRisk = $state<GeoRiskIndex | null>(null);
   let currentTime = $state(new Date().toLocaleTimeString('en-US', { hour12: false }));
   let marketStatuses = $state<MarketStatus[]>([]);
 
@@ -70,13 +72,14 @@
 
   async function loadData() {
     try {
-      const [crypto, stocks, commodities, currencies, sectorRes, emaBBStocks] = await Promise.all([
+      const [crypto, stocks, commodities, currencies, sectorRes, emaBBStocks, geo] = await Promise.all([
         fetchCryptoData(),
         fetchIndonesianStocks(),
         fetchCommodities(),
         fetchCurrencyRates('EUR'),
         fetch('/api/stocks/sectors').then(r => r.json()),
         fetchStocksEMABBStrategy(),
+        fetchGeoRiskIndex(),
       ]);
 
       const newTickers: MarketTicker[] = [];
@@ -129,6 +132,7 @@
       marketStatuses = getMarketStatuses();
       sectorData = sectorRes?.sectors || [];
       stocksEMABB = emaBBStocks || [];
+      geoRisk = geo;
     } catch (e) {
       console.error('Dashboard data fetch error:', e);
     }
@@ -278,6 +282,53 @@
           {/each}
           <a href="/commodities" class="block text-center text-[#0088ff] text-xs mt-3 hover:underline">VIEW ALL →</a>
         </div>
+      </div>
+
+      <!-- GEOPOLITICAL RISK -->
+      <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
+        <div class="terminal-panel-header">🌍 GEO RISK INDEX</div>
+        {#if geoRisk}
+          <div class="p-3 space-y-2">
+            <div class="flex items-center justify-between py-2 border-b border-[#333]">
+              <div>
+                <span class="text-xs text-gray-400">GLOBAL TENSION</span>
+              </div>
+              <div class="text-right">
+                <span class="font-bold text-2xl {
+                  geoRisk.level === 'SEVERE' ? 'text-[#ff0000]' :
+                  geoRisk.level === 'HIGH' ? 'text-[#ff6600]' :
+                  geoRisk.level === 'MODERATE' ? 'text-[#ffcc00]' :
+                  'text-[#00ff00]'
+                }">{geoRisk.globalTension}</span>
+                <span class="text-xs text-gray-400 ml-1">/100</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b border-[#333]">
+              <span class="text-xs text-gray-400">LEVEL</span>
+              <span class="px-2 py-0.5 rounded text-xs font-bold {
+                geoRisk.level === 'SEVERE' ? 'bg-[#ff0000]/20 text-[#ff0000]' :
+                geoRisk.level === 'HIGH' ? 'bg-[#ff6600]/20 text-[#ff6600]' :
+                geoRisk.level === 'MODERATE' ? 'bg-[#ffcc00]/20 text-[#ffcc00]' :
+                'bg-[#00ff00]/20 text-[#00ff00]'
+              }">{geoRisk.level}</span>
+            </div>
+            {#each geoRisk.topRisks.slice(0, 3) as risk}
+              <div class="py-1 text-xs">
+                <div class="flex items-center gap-1 mb-0.5">
+                  <span class="w-1.5 h-1.5 rounded-full {
+                    risk.intensity >= 7 ? 'bg-[#ff0000]' :
+                    risk.intensity >= 5 ? 'bg-[#ff6600]' :
+                    'bg-[#ffcc00]'
+                  }"></span>
+                  <span class="text-gray-400">{risk.region}</span>
+                </div>
+                <p class="text-gray-300 truncate">{risk.event}</p>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <div class="p-4 text-center text-gray-500">Loading geo risk data...</div>
+        {/if}
       </div>
 
       <!-- IDX STOCKS -->
