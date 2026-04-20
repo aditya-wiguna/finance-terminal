@@ -58,6 +58,27 @@ const IDX_STOCKS = [
   { symbol: 'CPIN.JK', name: 'Charoen Pokphand' },
   { symbol: 'JECC.JK', name: 'J Resources' },
   { symbol: 'ISAT.JK', name: 'Indosat' },
+  { symbol: 'RAJA.JK', name: 'Raja Indonesia' },
+  { symbol: 'HRUM.JK', name: 'Harum Energy' },
+  { symbol: 'MEDC.JK', name: 'Medco Energi' },
+  { symbol: 'AKRA.JK', name: 'AKR Corporindo' },
+  { symbol: 'KLBF.JK', name: 'Kalbe Farma' },
+  { symbol: 'BRIS.JK', name: 'Bank BRIS' },
+  { symbol: 'BBNI.JK', name: 'Bank Negara Indonesia' },
+  { symbol: 'BTPS.JK', name: 'BTPN Sharia' },
+  { symbol: 'AMRT.JK', name: 'Amarta' },
+  { symbol: 'MAPI.JK', name: 'Mata Hari' },
+  { symbol: 'ACES.JK', name: 'Ace Hardware' },
+  { symbol: 'BUKA.JK', name: 'Bukalapak' },
+  { symbol: 'MTDL.JK', name: 'Metrodata' },
+  { symbol: 'MPPA.JK', name: 'Matahari' },
+  { symbol: 'KIJA.JK', name: 'Kijang' },
+  { symbol: 'AALI.JK', name: 'Astra Agro' },
+  { symbol: 'LSIP.JK', name: 'London Sumatra' },
+  { symbol: 'DSNG.JK', name: 'Dharma Samu' },
+  { symbol: 'SSMS.JK', name: 'Simba Sip' },
+  { symbol: 'JPFA.JK', name: 'Japfa' },
+  { symbol: 'SIMP.JK', name: 'Salim' },
 ];
 
 function calculateEMA(values: number[], period: number): number {
@@ -226,7 +247,13 @@ export async function GET() {
       }
     }
 
-    signals.sort((a, b) => b.strength - a.strength);
+    signals.sort((a, b) => {
+      // Prioritize BUY signals (momentum stocks) first
+      if (a.signal === 'BUY' && b.signal !== 'BUY') return -1;
+      if (b.signal === 'BUY' && a.signal !== 'BUY') return 1;
+      // Then sort by strength
+      return b.strength - a.strength;
+    });
 
     const result: StrategyResult = {
       stocks: signals.slice(0, 10),
