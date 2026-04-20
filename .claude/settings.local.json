@@ -13,7 +13,13 @@
       "Bash(node -e \"const yf = require\\('yahoo-finance2'\\).default; console.log\\(typeof yf\\);\")",
       "Bash(node -e ' *)",
       "Bash(grep *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(npx svelte-kit *)",
+      "Bash(git stash *)",
+      "Bash(git show *)",
+      "Read(//tmp/**)",
+      "Bash(cp src/routes/+page.svelte src/routes/+page.svelte.new)",
+      "Bash(cp src/routes/+page.svelte.orig src/routes/+page.svelte)"
     ]
   }
 }

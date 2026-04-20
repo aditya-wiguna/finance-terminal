@@ -59,3 +59,48 @@ export async function fetchStockQuote(symbol: string): Promise<StockData | null>
     return null;
   }
 }
+
+export interface StockStrategySignal {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  signal: 'BUY' | 'SELL' | 'HOLD' | 'SIDEWAYS';
+  strength: number;
+  ema21: number;
+  ema34: number;
+  ema50: number;
+  bbUpper: number;
+  bbMiddle: number;
+  bbLower: number;
+  bbPosition: number;
+  trend: 'BULLISH' | 'BEARISH' | 'SIDEWAYS';
+  reason: string;
+}
+
+let cachedStrategy: StockStrategySignal[] = [];
+let lastStrategyFetchTime = 0;
+const STRATEGY_CACHE_DURATION = 60000; // 1 minute
+
+export async function fetchStocksEMABBStrategy(): Promise<StockStrategySignal[]> {
+  const now = Date.now();
+
+  if (cachedStrategy.length > 0 && now - lastStrategyFetchTime < STRATEGY_CACHE_DURATION) {
+    return cachedStrategy;
+  }
+
+  try {
+    const response = await fetch('/api/stocks/ema-bb');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const result = await response.json();
+    const stocks = result.stocks || [];
+
+    cachedStrategy = stocks;
+    lastStrategyFetchTime = now;
+    return stocks;
+  } catch (error) {
+    console.error('Stocks EMA-BB API error:', error);
+    return cachedStrategy.length > 0 ? cachedStrategy : [];
+  }
+}

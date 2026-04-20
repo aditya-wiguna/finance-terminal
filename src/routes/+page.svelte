@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { fetchCryptoData } from '$lib/api/crypto';
   import { fetchIndonesianStocks } from '$lib/api/stocks';
+import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/stocks';
   import { fetchCommodities } from '$lib/api/commodities';
   import { fetchCurrencyRates } from '$lib/api/currency';
 
@@ -30,6 +31,7 @@
 
   let tickers = $state<MarketTicker[]>([]);
   let sectorData = $state<SectorData[]>([]);
+  let stocksEMABB = $state<StockStrategySignal[]>([]);
   let currentTime = $state(new Date().toLocaleTimeString('en-US', { hour12: false }));
   let marketStatuses = $state<MarketStatus[]>([]);
 
@@ -69,12 +71,13 @@
 
   async function loadData() {
     try {
-      const [crypto, stocks, commodities, currencies, sectorRes] = await Promise.all([
+      const [crypto, stocks, commodities, currencies, sectorRes, emaBBStocks] = await Promise.all([
         fetchCryptoData(),
         fetchIndonesianStocks(),
         fetchCommodities(),
         fetchCurrencyRates('EUR'),
         fetch('/api/stocks/sectors').then(r => r.json()),
+        fetchStocksEMABBStrategy(),
       ]);
 
       const newTickers: MarketTicker[] = [];
@@ -126,6 +129,7 @@
       tickers = newTickers;
       marketStatuses = getMarketStatuses();
       sectorData = sectorRes?.sectors || [];
+      stocksEMABB = emaBBStocks || [];
     } catch (e) {
       console.error('Dashboard data fetch error:', e);
     }
@@ -324,6 +328,74 @@
             <a href="/whales" class="block text-center text-[#ff0000] text-xs mt-3 hover:underline">VIEW WHALE TRACKER →</a>
           </div>
         </div>
+      </div>
+
+      <!-- EMA-BB Strategy IDX Stocks Card -->
+      <div class="col-span-1 md:col-span-12 terminal-panel overflow-hidden">
+        <div class="terminal-panel-header">
+          📈 IDX STOCKS (EMA 21/34/50 + BOLLINGER BANDS)
+        </div>
+        {#if stocksEMABB.length === 0}
+          <div class="p-4 text-center text-gray-500">Loading strategy signals...</div>
+        {:else}
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-gray-400 border-b border-[#333]">
+                  <th class="text-left p-2">SYMBOL</th>
+                  <th class="text-right p-2">PRICE</th>
+                  <th class="text-right p-2">CHG%</th>
+                  <th class="text-center p-2">SIGNAL</th>
+                  <th class="text-center p-2">TREND</th>
+                  <th class="text-right p-2">STRENGTH</th>
+                  <th class="text-right p-2">BB POS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each stocksEMABB as stock}
+                  <tr class="border-b border-[#222] hover:bg-[#1a1a1a]">
+                    <td class="p-2">
+                      <span class="text-[#00ff00] font-bold">{stock.symbol}</span>
+                    </td>
+                    <td class="text-right p-2 font-mono">Rp {formatNumber(stock.price, 0)}</td>
+                    <td class="text-right p-2 {stock.change >= 0 ? 'price-up' : 'price-down'}">
+                      {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                    </td>
+                    <td class="text-center p-2">
+                      <span class="px-2 py-0.5 rounded text-xs font-bold {
+                        stock.signal === 'BUY' ? 'bg-[#00ff00]/20 text-[#00ff00]' :
+                        stock.signal === 'SELL' ? 'bg-[#ff0000]/20 text-[#ff0000]' :
+                        stock.signal === 'SIDEWAYS' ? 'bg-[#ffcc00]/20 text-[#ffcc00]' :
+                        'bg-[#0088ff]/20 text-[#0088ff]'
+                      }">{stock.signal}</span>
+                    </td>
+                    <td class="text-center p-2">
+                      <span class="{
+                        stock.trend === 'BULLISH' ? 'text-[#00ff00]' :
+                        stock.trend === 'BEARISH' ? 'text-[#ff0000]' :
+                        'text-[#ffcc00]'
+                      }">{stock.trend}</span>
+                    </td>
+                    <td class="text-right p-2">
+                      <div class="flex items-center justify-end gap-1">
+                        <div class="w-12 h-1 bg-[#333] rounded overflow-hidden">
+                          <div class="h-full bg-[#00ff00]" style="width: {stock.strength}%"></div>
+                        </div>
+                        <span class="font-mono">{stock.strength}</span>
+                      </div>
+                    </td>
+                    <td class="text-right p-2 font-mono">
+                      <span class="{stock.bbPosition < 30 ? 'text-[#00ff00]' : stock.bbPosition > 70 ? 'text-[#ff0000]' : 'text-gray-400'}">
+                        {stock.bbPosition.toFixed(0)}%
+                      </span>
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+          <a href="/stocks" class="block text-center text-[#0088ff] text-xs mt-3 hover:underline">VIEW ALL STOCKS →</a>
+        {/if}
       </div>
 
       <!-- Sector Heatmap with Real Data -->
