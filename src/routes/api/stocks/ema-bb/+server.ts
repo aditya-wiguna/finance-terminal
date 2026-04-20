@@ -30,6 +30,7 @@ interface StrategySignal {
   bbPosition: number;
   trend: 'BULLISH' | 'BEARISH' | 'SIDEWAYS';
   reason: string;
+  history: number[];
 }
 
 interface StrategyResult {
@@ -45,7 +46,6 @@ const IDX_STOCKS = [
   { symbol: 'ASII.JK', name: 'Astra International' },
   { symbol: 'GOTO.JK', name: 'GoTo Gojek Tokopedia' },
   { symbol: 'UNVR.JK', name: 'Unilever Indonesia' },
-  { symbol: 'HMSN.JK', name: 'Harum Energy' },
   { symbol: 'PTBA.JK', name: 'Bukit Asam' },
   { symbol: 'ANTM.JK', name: 'Aneka Tambang' },
   { symbol: 'INDF.JK', name: 'Indofood CBP' },
@@ -209,13 +209,14 @@ function analyzeStock(
     bbPosition,
     trend,
     reason,
+    history: closes.slice(-30),
   };
 }
 
 export async function GET() {
   const cacheKey = 'stocks_ema_bb';
 
-  const cached = getCache<StrategyResult>(cacheKey);
+  const cached = await getCache<StrategyResult>(cacheKey);
   if (cached) {
     return json(cached);
   }
@@ -260,7 +261,7 @@ export async function GET() {
       lastUpdate: new Date().toISOString(),
     };
 
-    setCache(cacheKey, result);
+    await setCache(cacheKey, result);
 
     return json(result);
   } catch (error) {

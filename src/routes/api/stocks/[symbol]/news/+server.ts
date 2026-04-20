@@ -24,7 +24,7 @@ export async function GET({ params }) {
 
     // Check cache
     const cacheKey = `news_stock_${symbol}`;
-    const cached = getCache<NewsArticle[]>(cacheKey);
+    const cached = await getCache<NewsArticle[]>(cacheKey);
     if (cached) {
       return json(cached);
     }
@@ -50,7 +50,7 @@ export async function GET({ params }) {
     }));
 
     // Store in cache
-    setCache(cacheKey, articles);
+    await setCache(cacheKey, articles);
 
     return json(articles);
   } catch (error) {

@@ -21,7 +21,7 @@ export async function GET({ url }) {
 
     // Check cache based on query
     const cacheKey = `search_${query.toLowerCase()}`;
-    const cached = getCache<SearchResult[]>(cacheKey);
+    const cached = await getCache<SearchResult[]>(cacheKey);
     if (cached) {
       return json(cached);
     }
@@ -41,7 +41,7 @@ export async function GET({ url }) {
       }));
 
     // Store in cache
-    setCache(cacheKey, searchResults);
+    await setCache(cacheKey, searchResults);
 
     return json(searchResults);
   } catch (error) {

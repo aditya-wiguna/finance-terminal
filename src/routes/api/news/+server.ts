@@ -97,7 +97,7 @@ export async function GET({ url }) {
 
     // Check cache based on category (news is expensive)
     const cacheKey = `news_${category}`;
-    const cached = getCache<NewsArticle[]>(cacheKey);
+    const cached = await getCache<NewsArticle[]>(cacheKey);
     if (cached) {
       return json(cached);
     }
@@ -211,7 +211,7 @@ export async function GET({ url }) {
     }
 
     // Store in cache
-    setCache(cacheKey, articles);
+    await setCache(cacheKey, articles);
 
     return json(articles);
   } catch (error) {

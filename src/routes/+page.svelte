@@ -5,6 +5,7 @@
   import { fetchCommodities } from '$lib/api/commodities';
   import { fetchGeoRiskIndex, type GeoRiskIndex } from '$lib/api/geopolitical';
   import GeoRiskMap from '$lib/components/GeoRiskMap.svelte';
+  import MiniSparkline from '$lib/components/MiniSparkline.svelte';
   import { fetchCurrencyRates } from '$lib/api/currency';
 
   interface MarketTicker {
@@ -148,11 +149,8 @@
       marketStatuses = getMarketStatuses();
     }, 1000);
 
-    const dataInterval = setInterval(loadData, 30000);
-
     return () => {
       clearInterval(timeInterval);
-      clearInterval(dataInterval);
     };
   });
 
@@ -400,6 +398,7 @@
                   <th class="text-left p-2">SYMBOL</th>
                   <th class="text-right p-2">PRICE</th>
                   <th class="text-right p-2">CHG%</th>
+                  <th class="text-center p-2">30D</th>
                   <th class="text-center p-2">SIGNAL</th>
                   <th class="text-center p-2">TREND</th>
                   <th class="text-right p-2">STRENGTH</th>
@@ -415,6 +414,18 @@
                     <td class="text-right p-2 font-mono">Rp {formatNumber(stock.price, 0)}</td>
                     <td class="text-right p-2 {stock.change >= 0 ? 'price-up' : 'price-down'}">
                       {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                    </td>
+                    <td class="text-center p-1">
+                      {#if stock.history?.length > 0}
+                        <MiniSparkline
+                          data={stock.history}
+                          width={60}
+                          height={20}
+                          color={stock.change >= 0 ? '#00ff00' : '#ff0000'}
+                        />
+                      {:else}
+                        <span class="text-gray-500">-</span>
+                      {/if}
                     </td>
                     <td class="text-center p-2">
                       <span class="px-2 py-0.5 rounded text-xs font-bold {

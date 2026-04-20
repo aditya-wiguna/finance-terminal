@@ -15,6 +15,7 @@
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/kit": "^2.57.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@types/bcrypt": "^6.0.0",
 		"autoprefixer": "^10.5.0",
 		"postcss": "^8.5.10",
 		"svelte": "^5.55.2",
@@ -24,8 +25,19 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"@neondatabase/serverless": "^1.1.0",
+		"@supabase/supabase-js": "^2.104.0",
+		"@types/better-sqlite3": "^7.6.13",
 		"@types/leaflet": "^1.9.21",
+		"bcrypt": "^6.0.0",
+		"better-sqlite3": "^12.9.0",
+		"dotenv": "^17.4.2",
+		"drizzle-kit": "^0.31.10",
+		"drizzle-orm": "^0.45.2",
 		"leaflet": "^1.9.4",
+		"pg": "^8.20.0",
+		"pg-query": "^0.11.0",
+		"postgres": "^3.4.9",
 		"yahoo-finance2": "^3.14.0"
 	}
 }

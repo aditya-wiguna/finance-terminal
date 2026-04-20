@@ -19,7 +19,18 @@
       "Bash(git show *)",
       "Read(//tmp/**)",
       "Bash(cp src/routes/+page.svelte src/routes/+page.svelte.new)",
-      "Bash(cp src/routes/+page.svelte.orig src/routes/+page.svelte)"
+      "Bash(cp src/routes/+page.svelte.orig src/routes/+page.svelte)",
+      "Bash(npx drizzle-kit *)",
+      "Bash(node -e \"const p = require\\('postgres'\\); console.log\\(Object.keys\\(p\\)\\)\")",
+      "Bash(node -e \"const { default: pg } = require\\('postgres'\\); console.log\\(typeof pg\\)\")",
+      "Bash(node -e \"const p = require\\('postgres'\\); console.log\\(p.toString\\(\\).substring\\(0, 200\\)\\)\")",
+      "Bash(npm list *)",
+      "Bash(node -e \"const d = require\\('drizzle-orm'\\); console.log\\(Object.keys\\(d\\).filter\\(k => k.toLowerCase\\(\\).includes\\('drizzle'\\)\\)\\)\")",
+      "Bash(node -e \"const d = require\\('drizzle-orm/pg-core'\\); console.log\\(Object.keys\\(d\\).filter\\(k => k.toLowerCase\\(\\).includes\\('drizzle'\\)\\)\\)\")",
+      "Bash(node -e \"const d = require\\('drizzle-orm/postgres-js'\\); console.log\\(Object.keys\\(d\\).filter\\(k => k.toLowerCase\\(\\).includes\\('drizzle'\\)\\)\\)\")",
+      "Bash(node -e \"console.log\\('DB from process:', !!process.env.DATABASE_URL\\)\")",
+      "Bash(node *)",
+      "Bash(taskkill /F /IM node.exe)"
     ]
   }
 }

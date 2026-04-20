@@ -68,7 +68,7 @@ export async function GET() {
   const cacheKey = 'stocks_sectors';
 
   // Check cache first
-  const cached = getCache<{ sectors: SectorData[] }>(cacheKey);
+  const cached = await getCache<{ sectors: SectorData[] }>(cacheKey);
   if (cached) {
     return json(cached);
   }
@@ -118,7 +118,7 @@ export async function GET() {
 
     // Store in cache
     const result = { sectors };
-    setCache(cacheKey, result);
+    await setCache(cacheKey, result);
 
     return json(result);
   } catch (error) {

@@ -190,7 +190,7 @@ export async function GET() {
   const cacheKey = 'currency_strategy';
 
   // Check cache first
-  const cached = getCache<StrategyResult>(cacheKey);
+  const cached = await getCache<StrategyResult>(cacheKey);
   if (cached) {
     return json(cached);
   }
@@ -225,7 +225,7 @@ export async function GET() {
     };
 
     // Store in cache
-    setCache(cacheKey, result);
+    await setCache(cacheKey, result);
 
     return json(result);
   } catch (error) {

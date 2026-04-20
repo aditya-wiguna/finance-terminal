@@ -2,8 +2,31 @@
   import { onMount } from 'svelte';
   import { fetchCryptoData, fetchTrendingMemeCoins, getCryptoStats, type CryptoData, type TrendingMemeCoin } from '$lib/api/crypto';
 
+  interface MemeWhaleCoin {
+    symbol: string;
+    name: string;
+    price: number;
+    priceChange24h: number;
+    volume24h: number;
+    liquidity: number;
+    marketCap: string;
+    buys24h: number;
+    sells24h: number;
+    netWhaleFlow: number;
+    smartMoneyActivity: 'HIGH' | 'MEDIUM' | 'LOW';
+    signal: 'BUY' | 'SELL' | 'HOLD';
+    reason: string;
+    txns: { type: 'buy' | 'sell'; amount: string; amountUsd: number; time: string; wallet: string }[];
+  }
+
+  interface MemeWhaleResult {
+    coins: MemeWhaleCoin[];
+    lastUpdate: string;
+  }
+
   let cryptoData = $state<CryptoData[]>([]);
   let memeCoins = $state<TrendingMemeCoin[]>([]);
+  let memeWhales = $state<MemeWhaleCoin[]>([]);
   let loading = $state(true);
   let error = $state('');
   let lastUpdate = $state('');
@@ -14,12 +37,14 @@
     try {
       loading = true;
       error = '';
-      const [crypto, memes] = await Promise.all([
+      const [crypto, memes, whales] = await Promise.all([
         fetchCryptoData(),
-        fetchTrendingMemeCoins()
+        fetchTrendingMemeCoins(),
+        fetch('/api/crypto/meme-whales').then(r => r.json()).catch(() => ({ coins: [] } as MemeWhaleResult))
       ]);
       cryptoData = crypto;
       memeCoins = memes;
+      memeWhales = whales.coins || [];
       lastUpdate = new Date().toLocaleTimeString('en-US', { hour12: false });
     } catch (e) {
       error = 'Failed to fetch crypto data';
@@ -89,6 +114,21 @@
       case 'BEARISH': return 'text-[#ff0000]';
       default: return 'text-[#ffcc00]';
     }
+  }
+
+  function getSmartMoneyColor(activity: string): string {
+    switch (activity) {
+      case 'HIGH': return 'text-[#00ff00]';
+      case 'MEDIUM': return 'text-[#ffcc00]';
+      default: return 'text-gray-500';
+    }
+  }
+
+  function formatLargeNumber(num: number): string {
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
+    return `$${num.toFixed(2)}`;
   }
 
   let stats = $derived(getCryptoStats());
@@ -215,6 +255,86 @@
                   <div class="text-xs {coin.change24h >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'}">
                     {coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(1)}%
                   </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+    <!-- Whale Meme Coins Card -->
+    {#if memeWhales.length > 0}
+      <div class="terminal-panel mb-6 border-[#00ccff]">
+        <div class="terminal-panel-header bg-gradient-to-r from-[#00ccff] to-[#00ff00] text-black font-bold">🐋 WHALE MEME COINS (DEX TRENDING)</div>
+        <div class="p-4">
+          {#if loading && memeWhales.length === 0}
+            <div class="p-4 text-center text-gray-500">Loading whale data...</div>
+          {:else}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {#each memeWhales.slice(0, 6) as coin}
+                <div class="bg-[#0a0a0a] rounded p-4 border {coin.signal === 'BUY' ? 'border-[#00ff00]/50' : coin.signal === 'SELL' ? 'border-[#ff0000]/50' : 'border-[#333]'}">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#00ccff] to-[#00ff00] flex items-center justify-center text-black font-bold text-xs">
+                        {coin.symbol.slice(0, 2)}
+                      </div>
+                      <div>
+                        <div class="text-white font-bold">{coin.symbol}</div>
+                        <div class="text-gray-500 text-xs">{coin.name}</div>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-white font-mono text-sm">${formatPrice(coin.price)}</div>
+                      <div class="{coin.priceChange24h >= 0 ? 'text-[#00ff00]' : 'text-[#ff0000]'} text-xs">
+                        {coin.priceChange24h >= 0 ? '+' : ''}{coin.priceChange24h.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="px-3 py-1 rounded text-xs font-bold {coin.signal === 'BUY' ? 'bg-[#00ff00]/20 text-[#00ff00]' : coin.signal === 'SELL' ? 'bg-[#ff0000]/20 text-[#ff0000]' : 'bg-[#ffcc00]/20 text-[#ffcc00]'}">
+                      {coin.signal}
+                    </span>
+                    <span class="text-xs text-gray-500">Smart Money:</span>
+                    <span class="text-xs {getSmartMoneyColor(coin.smartMoneyActivity)}">{coin.smartMoneyActivity}</span>
+                  </div>
+
+                  <div class="text-xs text-gray-400 mb-3 line-clamp-2">{coin.reason}</div>
+
+                  <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">24h Buys</span>
+                      <span class="text-[#00ff00]">{coin.buys24h}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">24h Sells</span>
+                      <span class="text-[#ff0000]">{coin.sells24h}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Volume</span>
+                      <span class="text-white">{formatLargeNumber(coin.volume24h)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Liquidity</span>
+                      <span class="text-white">{formatLargeNumber(coin.liquidity)}</span>
+                    </div>
+                  </div>
+
+                  {#if coin.txns && coin.txns.length > 0}
+                    <div class="border-t border-[#333] pt-3 mt-3">
+                      <div class="text-xs text-gray-500 mb-2">Recent Whale Activity</div>
+                      <div class="space-y-1">
+                        {#each coin.txns.slice(0, 3) as tx}
+                          <div class="flex justify-between items-center text-xs">
+                            <span class="{tx.type === 'buy' ? 'text-[#00ff00]' : 'text-[#ff0000]'}">{tx.type.toUpperCase()}</span>
+                            <span class="text-gray-400">{tx.amount}</span>
+                            <span class="text-gray-500">${formatLargeNumber(tx.amountUsd)}</span>
+                          </div>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
                 </div>
               {/each}
             </div>

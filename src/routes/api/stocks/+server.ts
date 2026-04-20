@@ -105,7 +105,7 @@ export async function GET({ url }) {
 
     // Otherwise return all stocks - use cache
     const cacheKey = 'stocks_idx_all';
-    const cached = getCache<StockInfo[]>(cacheKey);
+    const cached = await getCache<StockInfo[]>(cacheKey);
     if (cached) {
       return json(cached);
     }
@@ -138,7 +138,7 @@ export async function GET({ url }) {
     }
 
     // Store in cache
-    setCache(cacheKey, stocks);
+    await setCache(cacheKey, stocks);
 
     return json(stocks);
   } catch (error) {

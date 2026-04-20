@@ -76,6 +76,7 @@ export interface StockStrategySignal {
   bbPosition: number;
   trend: 'BULLISH' | 'BEARISH' | 'SIDEWAYS';
   reason: string;
+  history: number[];
 }
 
 let cachedStrategy: StockStrategySignal[] = [];

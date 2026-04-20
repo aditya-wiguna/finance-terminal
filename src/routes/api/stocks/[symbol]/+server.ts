@@ -67,7 +67,7 @@ export async function GET({ params }) {
 
     // Check cache
     const cacheKey = `stock_${fullSymbol}`;
-    const cached = getCache<StockDetail>(cacheKey);
+    const cached = await getCache<StockDetail>(cacheKey);
     if (cached) {
       return json(cached);
     }
@@ -101,7 +101,7 @@ export async function GET({ params }) {
     };
 
     // Store in cache
-    setCache(cacheKey, stockDetail);
+    await setCache(cacheKey, stockDetail);
 
     return json(stockDetail);
   } catch (error) {

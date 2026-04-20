@@ -47,7 +47,7 @@ export async function GET() {
   const cacheKey = 'commodities_all';
 
   // Check cache first
-  const cached = getCache<CommodityInfo[]>(cacheKey);
+  const cached = await getCache<CommodityInfo[]>(cacheKey);
   if (cached) {
     return json(cached);
   }
@@ -78,7 +78,7 @@ export async function GET() {
     }
 
     // Store in cache
-    setCache(cacheKey, commodities);
+    await setCache(cacheKey, commodities);
 
     return json(commodities);
   } catch (error) {

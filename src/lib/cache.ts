@@ -1,52 +1,83 @@
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { getDb, api_cache } from '$lib/server/db';
+import { eq, and, lt } from 'drizzle-orm';
+import { getCache as getFileCache, setCache as setFileCache } from './cache-file';
 
-const CACHE_DIR = '.cache';
-const CACHE_DURATION = 60 * 1000; // 1 minute
+const CACHE_DURATION = 60 * 1000; // 1 minute default
 
-// Ensure cache directory exists
-try {
-  mkdirSync(CACHE_DIR, { recursive: true });
-} catch {}
+export async function getCache<T>(key: string): Promise<T | null> {
+  const db = getDb();
+  if (!db) {
+    // Fallback to file cache if DB not available
+    return getFileCache<T>(key);
+  }
 
-// Simple file-based cache shared across all users
-export function getCache<T>(key: string): T | null {
   try {
-    const filePath = join(CACHE_DIR, `${key}.json`);
-    if (!existsSync(filePath)) return null;
+    const result = await db
+      .select()
+      .from(api_cache)
+      .where(eq(api_cache.cacheKey, key))
+      .limit(1);
 
-    const data = readFileSync(filePath, 'utf-8');
-    const { content, timestamp } = JSON.parse(data);
+    const cached = result[0];
+    if (!cached) return null;
 
-    // Check if cache is still valid
-    if (Date.now() - timestamp < CACHE_DURATION) {
-      return content as T;
+    // Check if cache expired
+    if (new Date(cached.expiresAt) < new Date()) {
+      // Delete expired cache
+      await db.delete(api_cache).where(eq(api_cache.id, cached.id));
+      return null;
     }
-    return null;
-  } catch {
-    return null;
+
+    return cached.content as T;
+  } catch (e) {
+    console.error('Cache read error:', e);
+    // Fallback to file cache
+    return getFileCache<T>(key);
   }
 }
 
-export function setCache<T>(key: string, content: T): void {
+export async function setCache<T>(key: string, content: T, durationMs: number = CACHE_DURATION): Promise<void> {
+  const db = getDb();
+  const expiresAt = new Date(Date.now() + durationMs);
+
+  if (!db) {
+    // Fallback to file cache if DB not available
+    setFileCache(key, content);
+    return;
+  }
+
   try {
-    const filePath = join(CACHE_DIR, `${key}.json`);
-    writeFileSync(filePath, JSON.stringify({
-      content,
-      timestamp: Date.now()
-    }), 'utf-8');
+    // Upsert cache entry
+    await db.insert(api_cache).values({
+      cacheKey: key,
+      content: content as object,
+      expiresAt,
+    }).onConflictDoUpdate({
+      target: api_cache.cacheKey,
+      set: {
+        content: content as object,
+        expiresAt,
+      },
+    });
   } catch (e) {
     console.error('Cache write error:', e);
+    // Fallback to file cache
+    setFileCache(key, content);
   }
 }
 
-export function clearCache(key?: string): void {
+export async function clearCache(key?: string): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+
   try {
     if (key) {
-      const filePath = join(CACHE_DIR, `${key}.json`);
-      if (existsSync(filePath)) {
-        // deleteFileSync would be better but keeping it simple
-      }
+      await db.delete(api_cache).where(eq(api_cache.cacheKey, key));
+    } else {
+      // Clear all expired cache entries
+      await db.delete(api_cache).where(lt(api_cache.expiresAt, new Date()));
     }
-  } catch { }
+  } catch (e) {
+    console.error('Cache clear error:', e);
+  }
 }
