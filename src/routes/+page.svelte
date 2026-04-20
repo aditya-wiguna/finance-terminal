@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fetchCryptoData } from '$lib/api/crypto';
-  import { fetchIndonesianStocks } from '$lib/api/stocks';
-import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/stocks';
+  import { fetchIndonesianStocks, fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/stocks';
   import { fetchCommodities } from '$lib/api/commodities';
   import { fetchCurrencyRates } from '$lib/api/currency';
 
@@ -189,6 +188,7 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
 
   <div class="flex-1 overflow-auto p-2 md:p-4">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 min-h-0">
+      <!-- MARKET TICKER -->
       <div class="col-span-1 md:col-span-12 terminal-panel overflow-hidden">
         <div class="terminal-panel-header flex items-center justify-between">
           <span>MARKET TICKER</span>
@@ -214,6 +214,7 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
         </div>
       </div>
 
+      <!-- CRYPTO -->
       <div class="col-span-1 md:col-span-4 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">CRYPTO</div>
         <div class="p-3 space-y-2">
@@ -235,6 +236,7 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
         </div>
       </div>
 
+      <!-- CURRENCY -->
       <div class="col-span-1 md:col-span-4 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">CURRENCY</div>
         <div class="p-3 space-y-2">
@@ -256,6 +258,7 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
         </div>
       </div>
 
+      <!-- COMMODITIES -->
       <div class="col-span-1 md:col-span-4 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">COMMODITIES</div>
         <div class="p-3 space-y-2">
@@ -277,10 +280,10 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
         </div>
       </div>
 
-      <!-- IDX Stocks and Whale Alerts on same row -->
+      <!-- IDX STOCKS -->
       <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
         <div class="terminal-panel-header">INDONESIA STOCKS (IDX)</div>
-        <div class="p-3 space-y-2 max-h-48 md:max-h-48 overflow-y-auto">
+        <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
           {#each tickers.filter(t => t.type === 'stock') as stock}
             <div class="flex items-center justify-between py-2 border-b border-[#222] last:border-0">
               <div>
@@ -299,42 +302,40 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
         </div>
       </div>
 
+      <!-- WHALE ALERTS -->
       <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
         <div class="terminal-panel-header flex items-center gap-2">
           <span>🚨</span> WHALE ALERTS
         </div>
-        <div class="p-3 space-y-2 max-h-48 md:max-h-48 overflow-y-auto">
-            <div class="py-2 border-b border-[#333]">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
-                <span class="text-xs text-gray-400">2 min ago</span>
-              </div>
-              <p class="text-sm"><span class="text-[#f7931a]">3Aw8...d9K2</span> sold <span class="text-[#00ff00]">1,250 BTC</span> ($84.2M)</p>
+        <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
+          <div class="py-2 border-b border-[#333]">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
+              <span class="text-xs text-gray-400">2 min ago</span>
             </div>
-            <div class="py-2 border-b border-[#333]">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="px-2 py-0.5 bg-[#00ff00] text-black text-xs rounded">BUY</span>
-                <span class="text-xs text-gray-400">5 min ago</span>
-              </div>
-              <p class="text-sm"><span class="text-[#f7931a]">1Lz...9Xm</span> bought <span class="text-[#00ff00]">15,000 ETH</span> ($51.8M)</p>
-            </div>
-            <div class="py-2 border-b border-[#333]">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
-                <span class="text-xs text-gray-400">8 min ago</span>
-              </div>
-              <p class="text-sm"><span class="text-[#f7931a]">bc1q...xy</span> sold <span class="text-[#00ff00]">500 BTC</span> ($33.7M)</p>
-            </div>
-            <a href="/whales" class="block text-center text-[#ff0000] text-xs mt-3 hover:underline">VIEW WHALE TRACKER →</a>
+            <p class="text-sm"><span class="text-[#f7931a]">3Aw8...d9K2</span> sold <span class="text-[#00ff00]">1,250 BTC</span> ($84.2M)</p>
           </div>
+          <div class="py-2 border-b border-[#333]">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 bg-[#00ff00] text-black text-xs rounded">BUY</span>
+              <span class="text-xs text-gray-400">5 min ago</span>
+            </div>
+            <p class="text-sm"><span class="text-[#f7931a]">1Lz...9Xm</span> bought <span class="text-[#00ff00]">15,000 ETH</span> ($51.8M)</p>
+          </div>
+          <div class="py-2 border-b border-[#333]">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
+              <span class="text-xs text-gray-400">8 min ago</span>
+            </div>
+            <p class="text-sm"><span class="text-[#f7931a]">bc1q...xy</span> sold <span class="text-[#00ff00]">500 BTC</span> ($33.7M)</p>
+          </div>
+          <a href="/whales" class="block text-center text-[#ff0000] text-xs mt-3 hover:underline">VIEW WHALE TRACKER →</a>
         </div>
       </div>
 
-      <!-- EMA-BB Strategy IDX Stocks Card -->
+      <!-- EMA-BB STRATEGY IDX STOCKS -->
       <div class="col-span-1 md:col-span-12 terminal-panel overflow-hidden">
-        <div class="terminal-panel-header">
-          📈 IDX STOCKS (EMA 21/34/50 + BOLLINGER BANDS)
-        </div>
+        <div class="terminal-panel-header">📈 IDX STOCKS (EMA 21/34/50 + BOLLINGER BANDS)</div>
         {#if stocksEMABB.length === 0}
           <div class="p-4 text-center text-gray-500">Loading strategy signals...</div>
         {:else}
@@ -398,7 +399,7 @@ import { fetchStocksEMABBStrategy, type StockStrategySignal } from '$lib/api/sto
         {/if}
       </div>
 
-      <!-- Sector Heatmap with Real Data -->
+      <!-- SECTOR HEATMAP -->
       <div class="col-span-1 md:col-span-12 terminal-panel">
         <div class="terminal-panel-header">📊 SECTOR HEATMAP (IDX)</div>
         {#if sectorData.length === 0}
