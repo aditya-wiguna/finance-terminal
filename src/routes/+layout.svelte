@@ -89,11 +89,14 @@
       <a href="/stocks" class="nav-item {isActive('/stocks') ? 'active' : ''}" onclick={closeMobileMenu}>
         <span class="text-[#00ff00]">05</span> Indonesia Stocks
       </a>
+      <a href="/sgx" class="nav-item {isActive('/sgx') ? 'active' : ''}" onclick={closeMobileMenu}>
+        <span class="text-[#ff6600]">06</span> Singapore Stocks
+      </a>
       <a href="/whales" class="nav-item {isActive('/whales') ? 'active' : ''}" onclick={closeMobileMenu}>
-        <span class="text-[#ff0000]">06</span> Whale Tracker
+        <span class="text-[#ff0000]">07</span> Whale Tracker
       </a>
       <a href="/news" class="nav-item {isActive('/news') ? 'active' : ''}" onclick={closeMobileMenu}>
-        <span class="text-[#0088ff]">07</span> News
+        <span class="text-[#0088ff]">08</span> News
       </a>
     </nav>
     <div class="p-4 border-t border-[#333] text-xs text-gray-500">
