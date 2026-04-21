@@ -8,6 +8,7 @@
   import MiniSparkline from '$lib/components/MiniSparkline.svelte';
   import { fetchCurrencyRates } from '$lib/api/currency';
   import PredictionMarkets from '$lib/components/PredictionMarkets.svelte';
+  import SGXStocks from '$lib/components/SGXStocks.svelte';
 
   interface MarketTicker {
     symbol: string;
@@ -354,6 +355,9 @@
           <a href="/stocks" class="block text-center text-[#0088ff] text-xs mt-3 hover:underline">VIEW ALL →</a>
         </div>
       </div>
+
+      <!-- SGX STOCKS -->
+      <SGXStocks />
 
       <!-- WHALE ALERTS -->
       <div class="col-span-1 md:col-span-6 terminal-panel overflow-hidden">
