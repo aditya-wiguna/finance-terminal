@@ -7,6 +7,7 @@
   import GeoRiskMap from '$lib/components/GeoRiskMap.svelte';
   import MiniSparkline from '$lib/components/MiniSparkline.svelte';
   import { fetchCurrencyRates } from '$lib/api/currency';
+  import PredictionMarkets from '$lib/components/PredictionMarkets.svelte';
 
   interface MarketTicker {
     symbol: string;
@@ -384,6 +385,9 @@
           <a href="/whales" class="block text-center text-[#ff0000] text-xs mt-3 hover:underline">VIEW WHALE TRACKER →</a>
         </div>
       </div>
+
+      <!-- PREDICTION MARKETS -->
+      <PredictionMarkets />
 
       <!-- EMA-BB STRATEGY IDX STOCKS -->
       <div class="col-span-1 md:col-span-12 terminal-panel overflow-hidden">
