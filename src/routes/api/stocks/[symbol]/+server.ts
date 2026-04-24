@@ -63,7 +63,8 @@ function formatMarketCap(marketCap: number): string {
 export async function GET({ params }) {
   try {
     const symbol = params.symbol.toUpperCase();
-    const fullSymbol = symbol.includes('.') ? symbol : symbol;
+    // Add .JK suffix for Indonesian stocks if not present
+    const fullSymbol = symbol.includes('.') ? symbol : `${symbol}.JK`;
 
     // Check cache
     const cacheKey = `stock_${fullSymbol}`;

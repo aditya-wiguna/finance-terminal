@@ -2,6 +2,7 @@
   import '../app.css';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
+  import { navigating } from '$app/stores';
 
   let { children } = $props();
   let currentTime = $state('');
@@ -109,6 +110,12 @@
   </aside>
 
   <main class="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
+    <!-- Global Navigation Loading Bar -->
+    {#if $navigating}
+      <div class="h-1 bg-[#121212] fixed top-0 left-0 right-0 z-[100] overflow-hidden">
+        <div class="h-full bg-[#00ff00] animate-pulse" style="width: 100%"></div>
+      </div>
+    {/if}
     {@render children()}
   </main>
 </div>
