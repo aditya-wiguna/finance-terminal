@@ -1,24 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fetchBtcWhales, fetchEthWhales, fetchWhaleTransactions, getWhaleStats, type WhaleWallet, type WhaleTransaction } from '$lib/api/whales';
+  import { fetchWhaleTransactions, getWhaleStats, type WhaleTransaction } from '$lib/api/whales';
 
-  let btcWhales = $state<WhaleWallet[]>([]);
-  let ethWhales = $state<WhaleWallet[]>([]);
   let transactions = $state<WhaleTransaction[]>([]);
   let loading = $state(true);
   let error = $state('');
   let lastUpdate = $state('');
-  let alertVisible = $state(false);
 
   async function loadData() {
     try {
       loading = true;
       error = '';
-      [btcWhales, ethWhales, transactions] = await Promise.all([
-        fetchBtcWhales(),
-        fetchEthWhales(),
-        fetchWhaleTransactions(),
-      ]);
+      transactions = await fetchWhaleTransactions();
       lastUpdate = new Date().toLocaleTimeString('en-US', { hour12: false });
     } catch (e) {
       error = 'Failed to fetch whale data';
@@ -30,21 +23,8 @@
 
   onMount(() => {
     loadData();
-    // Refresh every 30 seconds
     const interval = setInterval(loadData, 30000);
-
-    // Simulate random whale alerts
-    const alertInterval = setInterval(() => {
-      if (Math.random() > 0.5) {
-        alertVisible = true;
-        setTimeout(() => alertVisible = false, 5000);
-      }
-    }, 15000);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(alertInterval);
-    };
+    return () => clearInterval(interval);
   });
 
   function formatAmountUsd(amount: number): string {
@@ -60,7 +40,7 @@
     <div class="flex items-center justify-between">
       <h1 class="text-lg font-bold text-[#ff0000]">WHALE TRACKER</h1>
       <div class="flex items-center gap-4 text-sm">
-        <span class="text-gray-500">Top 10 Whales Monitoring</span>
+        <span class="text-gray-500">Real-time Blockchain Transactions</span>
         {#if loading}
           <span class="text-[#ffcc00] animate-pulse">● LOADING</span>
         {:else}
@@ -72,24 +52,6 @@
   </div>
 
   <div class="flex-1 overflow-auto p-6">
-    {#if alertVisible}
-      <div class="whale-alert mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl animate-pulse">🐋</span>
-          <div>
-            <div class="text-[#ff0000] font-bold">WHALE ALERT!</div>
-            <div class="text-white text-sm">Large transaction detected on blockchain</div>
-          </div>
-        </div>
-        <button
-          onclick={() => alertVisible = false}
-          class="text-gray-500 hover:text-white"
-        >
-          ✕
-        </button>
-      </div>
-    {/if}
-
     {#if error}
       <div class="terminal-panel p-4 mb-4 border-[#ff0000]">
         <span class="text-[#ff0000]">{error}</span>
@@ -97,86 +59,12 @@
       </div>
     {/if}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="terminal-panel">
-        <div class="terminal-panel-header text-[#ff9900]">₿ BITCOIN WHALE WALLETS</div>
-        {#if loading && btcWhales.length === 0}
-          <div class="p-4 text-center text-gray-500">Loading...</div>
-        {:else}
-          <div class="divide-y divide-[#222]">
-            {#each btcWhales as whale}
-              <div class="p-3 hover:bg-[#1a1a1a] transition-colors">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded bg-[#ff9900]/20 flex items-center justify-center text-[#ff9900] font-bold text-sm">
-                      #{whale.rank}
-                    </div>
-                    <div>
-                      <div class="text-white font-mono text-sm">{whale.address.slice(0, 12)}...</div>
-                      <div class="text-xs">
-                        {#if whale.label.includes('Satoshi') || whale.label.includes('Unknown')}
-                          <span class="text-[#ff0000] font-bold">WALLET PAUS</span>
-                        {:else}
-                          <span class="text-gray-500">{whale.label}</span>
-                        {/if}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-[#ffcc00] font-bold text-sm">{whale.balance}</div>
-                    <div class="{whale.change.startsWith('+') ? 'text-[#00ff00]' : 'text-[#ff0000]'} text-xs">
-                      {whale.change}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <div class="terminal-panel">
-        <div class="terminal-panel-header text-[#0088ff]">Ξ ETHEREUM WHALE WALLETS</div>
-        {#if loading && ethWhales.length === 0}
-          <div class="p-4 text-center text-gray-500">Loading...</div>
-        {:else}
-          <div class="divide-y divide-[#222]">
-            {#each ethWhales as whale}
-              <div class="p-3 hover:bg-[#1a1a1a] transition-colors">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded bg-[#0088ff]/20 flex items-center justify-center text-[#0088ff] font-bold text-sm">
-                      #{whale.rank}
-                    </div>
-                    <div>
-                      <div class="text-white font-mono text-sm">{whale.address.slice(0, 14)}...</div>
-                      <div class="text-xs">
-                        {#if whale.label.includes('Vitalik') || whale.label.includes('Unknown')}
-                          <span class="text-[#ff0000] font-bold">WALLET PAUS</span>
-                        {:else}
-                          <span class="text-gray-500">{whale.label}</span>
-                        {/if}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-[#0088ff] font-bold text-sm">{whale.balance}</div>
-                    <div class="{whale.change.startsWith('+') ? 'text-[#00ff00]' : 'text-[#ff0000]'} text-xs">
-                      {whale.change}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-    </div>
-
     <div class="terminal-panel">
-      <div class="terminal-panel-header text-[#ff0000] animate-pulse">🐋 RECENT WHALE TRANSACTIONS</div>
+      <div class="terminal-panel-header text-[#ff0000] animate-pulse">🐋 RECENT WHALE TRANSACTIONS (>$50K)</div>
       {#if loading && transactions.length === 0}
         <div class="p-8 text-center text-gray-500">Loading transactions...</div>
+      {:else if transactions.length === 0}
+        <div class="p-8 text-center text-gray-500">No large transactions found</div>
       {:else}
         <div class="divide-y divide-[#222]">
           {#each transactions as tx}
@@ -201,7 +89,7 @@
                       <span class="text-gray-500 text-xs">({formatAmountUsd(tx.amountUsd)})</span>
                     </div>
                     <div class="text-gray-500 text-xs mt-1">
-                      @{tx.wallet} • {tx.symbol} • Tx: {tx.txHash}
+                      @{tx.wallet} • {tx.symbol} • Tx: {tx.txHash.slice(0, 12)}...
                     </div>
                   </div>
                 </div>
@@ -221,50 +109,50 @@
         <div class="terminal-panel-header mb-3">📊 WHALE STATISTICS</div>
         <div class="space-y-2 text-xs">
           <div class="flex justify-between">
-            <span class="text-gray-500">Total Whale Balance</span>
+            <span class="text-gray-500">Total Whale Volume</span>
             <span class="text-[#ffcc00]">{stats.totalWhaleBalance}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">24h Whale Volume</span>
+            <span class="text-gray-500">24h Volume</span>
             <span class="text-white">{stats.dailyVolume}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Large Txs (>$1M)</span>
+            <span class="text-gray-500">Large Txs (>$50K)</span>
             <span class="text-[#00ff00]">{stats.largeTxs}</span>
           </div>
         </div>
       </div>
       <div class="terminal-panel p-4">
-        <div class="terminal-panel-header mb-3">📈 EXCHANGE FLOWS</div>
+        <div class="terminal-panel-header mb-3">📈 TRANSACTION TYPES</div>
         <div class="space-y-2 text-xs">
           <div class="flex justify-between">
-            <span class="text-gray-500">Exchange Inflows</span>
-            <span class="text-[#ff0000]">{stats.exchangeInflows}</span>
+            <span class="text-[#00ff00]">BUY/Accumulation</span>
+            <span class="text-white">{transactions.filter(t => t.type === 'buy').length}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Exchange Outflows</span>
-            <span class="text-[#00ff00]">{stats.exchangeOutflows}</span>
+            <span class="text-[#ff0000]">SELL/Distribution</span>
+            <span class="text-white">{transactions.filter(t => t.type === 'sell').length}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Net Flow</span>
-            <span class="text-[#ff0000]">{stats.netFlow}</span>
+            <span class="text-[#ffcc00]">Transfers</span>
+            <span class="text-white">{transactions.filter(t => t.type === 'transfer').length}</span>
           </div>
         </div>
       </div>
       <div class="terminal-panel p-4">
-        <div class="terminal-panel-header mb-3">🐋 WALLET PAUS</div>
+        <div class="terminal-panel-header mb-3">🔗 DATA SOURCES</div>
         <div class="space-y-2 text-xs">
           <div class="flex justify-between">
-            <span class="text-gray-500">BTC Top Holders</span>
-            <span class="text-[#ff9900]">10 wallets</span>
+            <span class="text-gray-500">Bitcoin</span>
+            <span class="text-[#ff9900]">Blockchair</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">ETH Top Holders</span>
-            <span class="text-[#0088ff]">10 wallets</span>
+            <span class="text-gray-500">Ethereum</span>
+            <span class="text-[#0088ff]">Blockchair</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Combined Balance</span>
-            <span class="text-[#ffcc00]">$8.5M+ BTC</span>
+            <span class="text-gray-500">Solana</span>
+            <span class="text-[#00ff00]">DexScreener</span>
           </div>
         </div>
       </div>

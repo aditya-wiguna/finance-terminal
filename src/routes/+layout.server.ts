@@ -21,5 +21,5 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     throw redirect(302, '/login');
   }
 
-  return { user };
+  return { user: { id: user.id, email: user.email, name: user.name } };
 };

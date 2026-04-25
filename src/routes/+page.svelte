@@ -9,6 +9,7 @@
   import { fetchCurrencyRates } from '$lib/api/currency';
   import PredictionMarkets from '$lib/components/PredictionMarkets.svelte';
   import SGXStocks from '$lib/components/SGXStocks.svelte';
+  import { fetchWhaleTransactions, type WhaleTransaction } from '$lib/api/whales';
 
   interface MarketTicker {
     symbol: string;
@@ -39,6 +40,7 @@
   let geoRisk = $state<GeoRiskIndex | null>(null);
   let currentTime = $state(new Date().toLocaleTimeString('en-US', { hour12: false }));
   let marketStatuses = $state<MarketStatus[]>([]);
+  let whaleTransactions = $state<WhaleTransaction[]>([]);
 
   function getMarketStatuses(): MarketStatus[] {
     const now = new Date();
@@ -76,7 +78,7 @@
 
   async function loadData() {
     try {
-      const [crypto, stocks, commodities, currencies, sectorRes, emaBBStocks, geo] = await Promise.all([
+      const [crypto, stocks, commodities, currencies, sectorRes, emaBBStocks, geo, whales] = await Promise.all([
         fetchCryptoData(),
         fetchIndonesianStocks(),
         fetchCommodities(),
@@ -84,6 +86,7 @@
         fetch('/api/stocks/sectors').then(r => r.json()),
         fetchStocksEMABBStrategy(),
         fetchGeoRiskIndex(),
+        fetchWhaleTransactions(),
       ]);
 
       const newTickers: MarketTicker[] = [];
@@ -137,6 +140,7 @@
       sectorData = sectorRes?.sectors || [];
       stocksEMABB = emaBBStocks || [];
       geoRisk = geo;
+      whaleTransactions = whales || [];
     } catch (e) {
       console.error('Dashboard data fetch error:', e);
     }
@@ -365,27 +369,26 @@
           <span>🚨</span> WHALE ALERTS
         </div>
         <div class="p-3 space-y-2 max-h-48 overflow-y-auto">
-          <div class="py-2 border-b border-[#333]">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
-              <span class="text-xs text-gray-400">2 min ago</span>
-            </div>
-            <p class="text-sm"><span class="text-[#f7931a]">3Aw8...d9K2</span> sold <span class="text-[#00ff00]">1,250 BTC</span> ($84.2M)</p>
-          </div>
-          <div class="py-2 border-b border-[#333]">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="px-2 py-0.5 bg-[#00ff00] text-black text-xs rounded">BUY</span>
-              <span class="text-xs text-gray-400">5 min ago</span>
-            </div>
-            <p class="text-sm"><span class="text-[#f7931a]">1Lz...9Xm</span> bought <span class="text-[#00ff00]">15,000 ETH</span> ($51.8M)</p>
-          </div>
-          <div class="py-2 border-b border-[#333]">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="px-2 py-0.5 bg-[#ff0000] text-white text-xs rounded">SELL</span>
-              <span class="text-xs text-gray-400">8 min ago</span>
-            </div>
-            <p class="text-sm"><span class="text-[#f7931a]">bc1q...xy</span> sold <span class="text-[#00ff00]">500 BTC</span> ($33.7M)</p>
-          </div>
+          {#if whaleTransactions.length === 0}
+            <div class="text-gray-500 text-sm py-4 text-center">Loading whale transactions...</div>
+          {:else}
+            {#each whaleTransactions.slice(0, 5) as tx}
+              <div class="py-2 border-b border-[#333]">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="px-2 py-0.5 {tx.type === 'buy' ? 'bg-[#00ff00] text-black' : tx.type === 'sell' ? 'bg-[#ff0000] text-white' : 'bg-[#ffcc00] text-black'} text-xs rounded">
+                    {tx.type.toUpperCase()}
+                  </span>
+                  <span class="text-xs text-gray-400">{tx.time}</span>
+                </div>
+                <p class="text-sm">
+                  <span class="text-[#f7931a]">{tx.wallet}</span>
+                  <span class="text-gray-400"> → </span>
+                  <span class="text-[#00ff00]">{tx.amount}</span>
+                  <span class="text-gray-400">(${tx.amountUsd >= 1000000 ? `$${(tx.amountUsd / 1000000).toFixed(1)}M` : `$${(tx.amountUsd / 1000).toFixed(0)}K`})</span>
+                </p>
+              </div>
+            {/each}
+          {/if}
           <a href="/whales" class="block text-center text-[#ff0000] text-xs mt-3 hover:underline">VIEW WHALE TRACKER →</a>
         </div>
       </div>

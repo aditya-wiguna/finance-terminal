@@ -3,8 +3,9 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { navigating } from '$app/stores';
+  import { setCurrentUserId } from '$lib/api/portfolio';
 
-  let { children } = $props();
+  let { children, data }: { children: any; data?: { user?: { id?: string } } } = $props();
   let currentTime = $state('');
   let mobileMenuOpen = $state(false);
 
@@ -15,6 +16,12 @@
     updateClock();
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
+  });
+
+  $effect(() => {
+    if (data?.user?.id) {
+      setCurrentUserId(data.user.id);
+    }
   });
 
   function isActive(path: string): boolean {
@@ -98,6 +105,12 @@
       </a>
       <a href="/news" class="nav-item {isActive('/news') ? 'active' : ''}" onclick={closeMobileMenu}>
         <span class="text-[#0088ff]">08</span> News
+      </a>
+      <a href="/earnings" class="nav-item {isActive('/earnings') ? 'active' : ''}" onclick={closeMobileMenu}>
+        <span class="text-[#ffcc00]">09</span> Earnings
+      </a>
+      <a href="/portfolio" class="nav-item {isActive('/portfolio') ? 'active' : ''}" onclick={closeMobileMenu}>
+        <span class="text-[#0088ff]">10</span> Portfolio
       </a>
     </nav>
     <div class="p-4 border-t border-[#333] text-xs text-gray-500">

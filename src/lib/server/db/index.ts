@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { pgTable, text, timestamp, boolean, uuid, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, uuid, jsonb, numeric } from 'drizzle-orm/pg-core';
 import type { Pool as PoolType } from 'pg';
 
 // Schema definitions
@@ -41,7 +41,18 @@ const api_cache = pgTable('api_cache', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export { users, sessions, userSettings, api_cache };
+const portfolioPositions = pgTable('portfolio_positions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  symbol: text('symbol').notNull(),
+  name: text('name'),
+  shares: numeric('shares').notNull(),
+  avgPrice: numeric('avg_price').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export { users, sessions, userSettings, api_cache, portfolioPositions };
 
 // Lazy initialization
 let dbInstance: ReturnType<typeof drizzle> | null = null;
