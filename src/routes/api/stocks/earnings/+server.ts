@@ -9,11 +9,13 @@ interface EarningsEvent {
   name: string;
   date: string;
   time: string;
-  estimate: number;
+  estimate: number; // EPS estimate in IDR per share
   reported: number | null;
   surprise: number | null;
   surprisePercent: number | null;
   period: string;
+  revenueEstimate: number; // Revenue estimate in IDR
+  isEstimated: boolean;
 }
 
 interface EarningsResult {
@@ -64,10 +66,13 @@ async function fetchEarningsForStock(symbol: string, name: string): Promise<Earn
     const dateStr = formatDate(new Date(earningsDate));
     const time = (earnings as any).earningsTimezone || 'ICT';
 
-    const epsEstimate = (earnings as any).earningsEstimate?.eps?.predicted?.[0] ?? 0;
-    const epsReported = (earnings as any).earningsResult?.eps?.reported?.[0] ?? null;
-    const surprise = (earnings as any).earningsResult?.surprise?.[0] ?? null;
-    const surprisePct = (earnings as any).earningsResult?.surprisePercent?.[0] ?? null;
+    const epsEstimate = earnings.earningsAverage ?? 0;
+    const epsReported = earnings.earningsResult?.eps?.reported?.[0] ?? null;
+    const surprise = earnings.earningsResult?.surprise?.[0] ?? null;
+    const surprisePct = earnings.earningsResult?.surprisePercent?.[0] ?? null;
+
+    // Revenue in IDR (actual, not per share)
+    const revenueAvg = earnings.revenueAverage ?? 0;
 
     return {
       symbol,
@@ -78,7 +83,9 @@ async function fetchEarningsForStock(symbol: string, name: string): Promise<Earn
       reported: epsReported,
       surprise: surprise,
       surprisePercent: surprisePct,
-      period: (earnings as any).earningsPeriod?.[0] || 'Q1',
+      period: '', // Not available in calendarEvents
+      revenueEstimate: revenueAvg,
+      isEstimated: (earnings as any).isEarningsDateEstimate ?? true,
     };
   } catch (error) {
     return null;

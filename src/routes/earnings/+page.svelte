@@ -54,6 +54,13 @@
     if (value < 0) return 'text-[#ff0000]';
     return 'text-gray-400';
   }
+
+  function formatRevenue(value: number): string {
+    if (value >= 1e12) return `Rp ${(value / 1e12).toFixed(1)}T`;
+    if (value >= 1e9) return `Rp ${(value / 1e9).toFixed(1)}B`;
+    if (value >= 1e6) return `Rp ${(value / 1e6).toFixed(1)}M`;
+    return `Rp ${value.toFixed(0)}`;
+  }
 </script>
 
 <div class="h-full flex flex-col">
@@ -114,13 +121,14 @@
                   <th class="text-left p-3">DATE</th>
                   <th class="text-left p-3">SYMBOL</th>
                   <th class="text-left p-3 hidden md:table-cell">NAME</th>
-                  <th class="text-right p-3">ESTIMATE</th>
+                  <th class="text-right p-3">EPS EST.</th>
                   {#if activeTab === 'recent'}
-                    <th class="text-right p-3">REPORTED</th>
+                    <th class="text-right p-3">EPS REP.</th>
                     <th class="text-right p-3">SURPRISE</th>
                   {:else}
                     <th class="text-right p-3 hidden md:table-cell">DAYS LEFT</th>
                   {/if}
+                  <th class="text-right p-3 hidden lg:table-cell">REV EST.</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,7 +136,11 @@
                   <tr class="border-b border-[#222] hover:bg-[#1a1a1a]">
                     <td class="p-3">
                       <span class="text-white">{formatDate(event.date)}</span>
-                      <span class="text-gray-500 text-xs block">{event.time}</span>
+                      {#if event.isEstimated}
+                        <span class="text-xs text-[#ffcc00] block">Est.</span>
+                      {:else}
+                        <span class="text-xs text-gray-500 block">Confirmed</span>
+                      {/if}
                     </td>
                     <td class="p-3">
                       <a href="/stocks/{event.symbol}" class="text-[#00ff00] font-bold hover:underline">
@@ -136,7 +148,7 @@
                       </a>
                     </td>
                     <td class="p-3 text-gray-400 hidden md:table-cell">{event.name}</td>
-                    <td class="text-right p-3 font-mono">Rp {event.estimate.toFixed(0)}</td>
+                    <td class="text-right p-3 font-mono text-[#0088ff]">Rp {event.estimate.toFixed(0)}</td>
                     {#if activeTab === 'recent'}
                       <td class="text-right p-3 font-mono {event.reported !== null ? 'text-white' : 'text-gray-500'}">
                         {event.reported !== null ? `Rp ${event.reported.toFixed(0)}` : '-'}
@@ -155,6 +167,9 @@
                         </span>
                       </td>
                     {/if}
+                    <td class="text-right p-3 font-mono text-gray-400 hidden lg:table-cell">
+                      {event.revenueEstimate > 0 ? formatRevenue(event.revenueEstimate) : '-'}
+                    </td>
                   </tr>
                 {/each}
               </tbody>

@@ -3,11 +3,13 @@ export interface EarningsEvent {
   name: string;
   date: string;
   time: string;
-  estimate: number;
+  estimate: number; // EPS estimate
   reported: number | null;
   surprise: number | null;
   surprisePercent: number | null;
   period: string;
+  revenueEstimate: number; // Revenue estimate in IDR
+  isEstimated: boolean;
 }
 
 interface EarningsResult {
