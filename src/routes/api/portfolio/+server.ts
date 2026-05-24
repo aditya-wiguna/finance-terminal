@@ -1,7 +1,13 @@
 import { json } from '@sveltejs/kit';
-import { requireDb } from '$lib/server/db';
-import { portfolioPositions } from '$lib/server/db';
-import { eq, and } from 'drizzle-orm';
+import { Query } from 'appwrite';
+import {
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  listDocuments,
+  findDocument,
+  PORTFOLIO_COLLECTION_ID,
+} from '$lib/server/db';
 
 interface PortfolioPosition {
   id: string;
@@ -49,14 +55,14 @@ export async function GET({ request }: { request: Request }) {
   }
 
   try {
-    const db = requireDb();
-    
-    const dbPositions = await db
-      .select()
-      .from(portfolioPositions)
-      .where(eq(portfolioPositions.userId, userId));
+    const dbPositions = await listDocuments(PORTFOLIO_COLLECTION_ID, [
+      Query.equal('userId', userId),
+      Query.limit(100),
+    ]);
 
-    if (dbPositions.length === 0) {
+    const positions = dbPositions.documents || [];
+
+    if (positions.length === 0) {
       return json({
         positions: [],
         totalValue: 0,
@@ -73,10 +79,10 @@ export async function GET({ request }: { request: Request }) {
     let totalCost = 0;
 
     const enriched = await Promise.all(
-      dbPositions.map(async (pos) => {
-        const currentPrice = await fetchCurrentPrice(pos.symbol);
-        const shares = parseFloat(pos.shares);
-        const avgPrice = parseFloat(pos.avgPrice);
+      positions.map(async (pos) => {
+        const currentPrice = await fetchCurrentPrice(pos.symbol as string);
+        const shares = parseFloat(pos.shares as string);
+        const avgPrice = parseFloat(pos.avgPrice as string);
         const cost = shares * avgPrice;
         const value = shares * currentPrice;
         const pnl = value - cost;
@@ -86,7 +92,7 @@ export async function GET({ request }: { request: Request }) {
         totalValue += value;
 
         return {
-          id: pos.id,
+          id: pos.$id,
           symbol: pos.symbol,
           name: pos.name || pos.symbol,
           shares,
@@ -97,7 +103,7 @@ export async function GET({ request }: { request: Request }) {
           value,
           pnl,
           pnlPercent,
-          addedAt: pos.createdAt,
+          addedAt: pos.$createdAt,
         };
       })
     );
@@ -142,61 +148,55 @@ export async function POST({ request }: { request: Request }) {
   }
 
   try {
-    const db = requireDb();
-
     if (action === 'add') {
-      const existing = await db
-        .select()
-        .from(portfolioPositions)
-        .where(
-          and(
-            eq(portfolioPositions.userId, userId),
-            eq(portfolioPositions.symbol, symbol)
-          )
-        )
-        .then(rows => rows[0]);
+      const existing = await findDocument(PORTFOLIO_COLLECTION_ID, [
+        Query.equal('userId', userId),
+        Query.equal('symbol', symbol),
+        Query.limit(1),
+      ]);
 
       if (existing) {
-        const totalShares = parseFloat(existing.shares) + shares;
-        const totalCost = parseFloat(existing.shares) * parseFloat(existing.avgPrice) + shares * price;
+        const totalShares = parseFloat(existing.shares as string) + shares;
+        const totalCost = parseFloat(existing.shares as string) * parseFloat(existing.avgPrice as string) + shares * price;
         const newAvgPrice = totalCost / totalShares;
 
-        await db
-          .update(portfolioPositions)
-          .set({
-            shares: totalShares.toString(),
-            avgPrice: newAvgPrice.toString(),
-            updatedAt: new Date(),
-          })
-          .where(eq(portfolioPositions.id, existing.id));
+        await updateDocument(PORTFOLIO_COLLECTION_ID, existing.$id, {
+          shares: totalShares.toString(),
+          avgPrice: newAvgPrice.toString(),
+          name: name || symbol,
+        });
       } else {
-        await db.insert(portfolioPositions).values({
+        await createDocument(PORTFOLIO_COLLECTION_ID, {
           userId,
           symbol,
           name: name || symbol,
           shares: shares.toString(),
           avgPrice: price.toString(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
         });
       }
 
       return json({ success: true });
     } else if (action === 'remove') {
-      await db
-        .delete(portfolioPositions)
-        .where(
-          and(
-            eq(portfolioPositions.userId, userId),
-            eq(portfolioPositions.symbol, symbol)
-          )
-        );
+      const existing = await findDocument(PORTFOLIO_COLLECTION_ID, [
+        Query.equal('userId', userId),
+        Query.equal('symbol', symbol),
+        Query.limit(1),
+      ]);
+
+      if (existing) {
+        await deleteDocument(PORTFOLIO_COLLECTION_ID, existing.$id);
+      }
 
       return json({ success: true });
     } else if (action === 'clear') {
-      await db
-        .delete(portfolioPositions)
-        .where(eq(portfolioPositions.userId, userId));
+      const positions = await listDocuments(PORTFOLIO_COLLECTION_ID, [
+        Query.equal('userId', userId),
+        Query.limit(100),
+      ]);
+
+      for (const pos of positions.documents) {
+        await deleteDocument(PORTFOLIO_COLLECTION_ID, pos.$id);
+      }
 
       return json({ success: true });
     }

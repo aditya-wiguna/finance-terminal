@@ -1,5 +1,5 @@
-import { json, redirect } from '@sveltejs/kit';
-import { createUser, getUserByEmail, verifyPassword, createSession } from '$lib/server/auth';
+import { json } from '@sveltejs/kit';
+import { createUser, loginUser } from '$lib/server/auth';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -7,49 +7,46 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     const { email, password, name, action } = await request.json();
 
     if (action === 'register') {
-      // Check if user exists
-      const existing = await getUserByEmail(email);
-      if (existing) {
-        return json({ error: 'Email already registered' }, { status: 400 });
-      }
-
-      // Create user
+      console.log('[Auth API] Register action - creating user');
       const user = await createUser(email, password, name);
-      const token = await createSession(user.id);
+      console.log('[Auth API] User created:', user.id);
 
-      cookies.set('aw_session', token, {
+      console.log('[Auth API] Logging in user');
+      const loginResult = await loginUser(email, password);
+      console.log('[Auth API] Login success, token:', loginResult.sessionSecret.slice(0, 20) + '...');
+
+      cookies.set('aw_session', loginResult.sessionSecret, {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
         secure: false,
       });
+      console.log('[Auth API] Cookie set');
 
       return json({ success: true, user: { id: user.id, email: user.email, name: user.name } });
     }
 
     if (action === 'login') {
-      const user = await getUserByEmail(email);
-      if (!user) {
+      try {
+        console.log('[Auth API] Login action - calling loginUser');
+        const loginResult = await loginUser(email, password);
+        console.log('[Auth API] Login success, token:', loginResult.sessionSecret.slice(0, 20) + '...');
+
+        cookies.set('aw_session', loginResult.sessionSecret, {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7,
+          secure: false,
+        });
+        console.log('[Auth API] Cookie set');
+
+        return json({ success: true, user: { id: loginResult.userId, email } });
+      } catch (e: any) {
+        console.error('[Auth API] Login failed:', e?.message || e);
         return json({ error: 'Invalid email or password' }, { status: 401 });
       }
-
-      const valid = await verifyPassword(password, user.passwordHash);
-      if (!valid) {
-        return json({ error: 'Invalid email or password' }, { status: 401 });
-      }
-
-      const token = await createSession(user.id);
-
-      cookies.set('aw_session', token, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        secure: false,
-      });
-
-      return json({ success: true, user: { id: user.id, email: user.email, name: user.name } });
     }
 
     return json({ error: 'Invalid action' }, { status: 400 });

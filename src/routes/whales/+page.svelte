@@ -40,7 +40,7 @@
     <div class="flex items-center justify-between">
       <h1 class="text-lg font-bold text-[#ff0000]">WHALE TRACKER</h1>
       <div class="flex items-center gap-4 text-sm">
-        <span class="text-gray-500">Real-time Blockchain Transactions</span>
+        <span class="text-gray-500">CryptoPulse • 30-min Delay</span>
         {#if loading}
           <span class="text-[#ffcc00] animate-pulse">● LOADING</span>
         {:else}
@@ -143,16 +143,16 @@
         <div class="terminal-panel-header mb-3">🔗 DATA SOURCES</div>
         <div class="space-y-2 text-xs">
           <div class="flex justify-between">
-            <span class="text-gray-500">Bitcoin</span>
-            <span class="text-[#ff9900]">Blockchair</span>
+            <span class="text-gray-500">Multi-Chain</span>
+            <span class="text-[#8b5cf6]">CryptoPulse</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Ethereum</span>
-            <span class="text-[#0088ff]">Blockchair</span>
+            <span class="text-gray-500">Free Tier</span>
+            <span class="text-[#00ff00]">10 txns/day</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Solana</span>
-            <span class="text-[#00ff00]">DexScreener</span>
+            <span class="text-gray-500">Chains</span>
+            <span class="text-[#0088ff]">34+ EVM</span>
           </div>
         </div>
       </div>
